@@ -1,0 +1,3 @@
+SELECT 'defective' scenario, currency, source_minor, candidate_minor, net_delta_minor, absolute_account_delta_minor, affected_notional_minor, (SELECT count(*) FROM `workspace`.`default`.`cutoverguard_222947f1bcdd4351_issues`) primary_findings FROM `workspace`.`default`.`cutoverguard_222947f1bcdd4351_totals`
+UNION ALL
+SELECT 'fixed' scenario, currency, source_minor, candidate_minor, net_delta_minor, absolute_account_delta_minor, affected_notional_minor, (SELECT count(*) FROM `workspace`.`default`.`cutoverguard_3c068b368cca461b_issues`) primary_findings FROM `workspace`.`default`.`cutoverguard_3c068b368cca461b_totals`;

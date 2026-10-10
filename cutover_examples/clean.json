@@ -1,0 +1,105 @@
+{
+  "schema_version": "1.0",
+  "data_kind": "synthetic",
+  "source": {
+    "snapshot_id": "synthetic-source-v1",
+    "captured_at": "2026-10-10T00:05:00Z",
+    "mapping_version": "source-map-v1",
+    "window_start": "2026-10-09T00:00:00Z",
+    "window_end": "2026-10-10T00:00:00Z",
+    "complete_through": "2026-10-10T00:00:00Z",
+    "profiles": [
+      {
+        "account_id": "0001",
+        "customer_id": "C1"
+      },
+      {
+        "account_id": "0002",
+        "customer_id": "C2"
+      }
+    ],
+    "transactions": [
+      {
+        "event_id": "E1",
+        "account_id": "0001",
+        "amount_minor": "100000",
+        "currency": "USD",
+        "event_time": "2026-10-09T12:00:00Z"
+      },
+      {
+        "event_id": "E2",
+        "account_id": "0002",
+        "amount_minor": "200000",
+        "currency": "USD",
+        "event_time": "2026-10-09T13:00:00Z"
+      }
+    ]
+  },
+  "candidate": {
+    "snapshot_id": "synthetic-candidate-clean-v1",
+    "captured_at": "2026-10-10T00:05:00Z",
+    "mapping_version": "cloud-map-v1",
+    "window_start": "2026-10-09T00:00:00Z",
+    "window_end": "2026-10-10T00:00:00Z",
+    "complete_through": "2026-10-10T00:00:00Z",
+    "profiles": [
+      {
+        "account_id": "0001",
+        "customer_id": "C1"
+      },
+      {
+        "account_id": "0002",
+        "customer_id": "C2"
+      }
+    ],
+    "transactions": [
+      {
+        "event_id": "E1",
+        "account_id": "0001",
+        "amount_minor": "100000",
+        "currency": "USD",
+        "event_time": "2026-10-09T12:00:00Z"
+      },
+      {
+        "event_id": "E2",
+        "account_id": "0002",
+        "amount_minor": "200000",
+        "currency": "USD",
+        "event_time": "2026-10-09T13:00:00Z"
+      }
+    ]
+  },
+  "config": {
+    "rule_version": "1.0",
+    "currency_scales": {
+      "USD": 2,
+      "EUR": 2
+    }
+  },
+  "dependency_graph": {
+    "nodes": [
+      {
+        "id": "profiles",
+        "label": "Account master"
+      },
+      {
+        "id": "transactions",
+        "label": "Cash events"
+      },
+      {
+        "id": "account_cash",
+        "label": "Account cash report"
+      }
+    ],
+    "edges": [
+      {
+        "from": "profiles",
+        "to": "transactions"
+      },
+      {
+        "from": "transactions",
+        "to": "account_cash"
+      }
+    ]
+  }
+}

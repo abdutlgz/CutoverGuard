@@ -1,0 +1,57 @@
+{
+  "status": "verified",
+  "mode": "read_only_databricks_sql",
+  "checked_at": "2026-10-10T19:53:38.009797+00:00",
+  "query_sha256": "7323bf39629e684ce1da6f2537b2b625f79a5957b673ea954427cefc8ec80c8d",
+  "rows": [
+    [
+      "1",
+      "Row count matches",
+      "PASS",
+      "1467",
+      "1467",
+      "1",
+      "\ud83d\udfe2 PASS"
+    ],
+    [
+      "2",
+      "Currency totals match",
+      "PASS",
+      "GBP 32293.03",
+      "GBP 32293.03",
+      "1",
+      "\ud83d\udfe2 PASS"
+    ],
+    [
+      "3",
+      "UTC daily totals match",
+      "PASS",
+      "2010-12-01 GBP 32293.03",
+      "2010-12-01 GBP 32293.03",
+      "1",
+      "\ud83d\udfe2 PASS"
+    ],
+    [
+      "4",
+      "Owner-ID checksum matches",
+      "PASS",
+      "3848360147932820500",
+      "3848360147932820500",
+      "1",
+      "\ud83d\udfe2 PASS"
+    ],
+    [
+      "5",
+      "CutoverGuard: invoice ownership",
+      "BLOCKED",
+      "\u2014",
+      "2 wrong-owner rows",
+      "1",
+      "\ud83d\udd34 BLOCKED"
+    ]
+  ],
+  "data_kind": "historical",
+  "scope": "Illustrative baseline: in-window count, separate currency totals, UTC daily totals, unweighted owner-ID checksum. No row identity or ownership association check.",
+  "checksum_convention": "SHA256(raw UTF-8 account_id) first16hex \u2192 unsigned64; sum over transaction rows modulo 2^64. Owner permutations preserve it; owner-aware row hashes need not.",
+  "source_report_sha256": "d80979d6a81788e9a5bc8a362d0eb589d8085ed1d63fcecdfd74a38d20004247"
+}

@@ -1,0 +1,198 @@
+{
+  "data_kind": "synthetic",
+  "description": "Designed fixtures and separately specified oracle expectations. Detector inputs do not contain these expected findings. No client data or observed performance claims.",
+  "fixtures": [
+    {
+      "id": "defective",
+      "label": "Defective",
+      "description": "Same USD 3000 total, two transactions assigned to the wrong accounts.",
+      "file": "defective.json",
+      "file_sha256": "d9a09d427f2a1f143985bcfd4f7927e5d2943a59a1b01044e066a745cc053edd",
+      "expected": {
+        "status": "blocked",
+        "primary": [
+          [
+            "account_mismatch",
+            "E1"
+          ],
+          [
+            "account_mismatch",
+            "E2"
+          ]
+        ],
+        "account_deltas": {
+          "0001/USD": "100000",
+          "0002/USD": "-100000"
+        },
+        "USD_net_minor": "0",
+        "USD_absolute_account_delta_minor": "200000",
+        "USD_affected_notional_minor": "300000"
+      }
+    },
+    {
+      "id": "clean",
+      "label": "Clean",
+      "description": "Identical source and candidate snapshots.",
+      "file": "clean.json",
+      "file_sha256": "11fee4d99e78b08b27f61d3ad0dc2de51d74761667cd26f7240f19714eac1227",
+      "expected": {
+        "status": "ready_for_review",
+        "primary": []
+      }
+    },
+    {
+      "id": "fixed",
+      "label": "Fixed",
+      "description": "Corrected candidate restores both transaction account associations.",
+      "file": "fixed.json",
+      "file_sha256": "c3a8d4eb33647cbe009a8f59561bbac168b66a2bb1fec2ca6b402dc32edf15d0",
+      "expected": {
+        "status": "ready_for_review",
+        "primary": []
+      }
+    },
+    {
+      "id": "missing_metadata",
+      "label": "Missing Metadata",
+      "description": "Candidate completion watermark is unknown.",
+      "file": "missing_metadata.json",
+      "file_sha256": "17f02fb06e24703e29c1cf3afaba93ef10fce804b692dba35607703ddb7dd0b4",
+      "expected": {
+        "status": "incomplete",
+        "primary": []
+      }
+    },
+    {
+      "id": "duplicate_keys",
+      "label": "Duplicate Keys",
+      "description": "Candidate has duplicate profile and event keys; joins are blocked.",
+      "file": "duplicate_keys.json",
+      "file_sha256": "5dd8569ff9784166daa465a6ec519ace8fe696e46f60d9e94de251958e4971ef",
+      "expected": {
+        "status": "blocked",
+        "primary": [
+          [
+            "duplicate_event_key",
+            "E1"
+          ],
+          [
+            "duplicate_profile_key",
+            "0001"
+          ]
+        ],
+        "aggregates": "unavailable"
+      }
+    },
+    {
+      "id": "lost_identifier",
+      "label": "Lost Identifier",
+      "description": "Candidate loses leading zeros on an account link.",
+      "file": "lost_identifier.json",
+      "file_sha256": "f35b01db052b4a9524794797b7bc320a74d62a98b81210305fbbac4ca7ca07dc",
+      "expected": {
+        "status": "blocked",
+        "primary": [
+          [
+            "invalid_account_link",
+            "E1"
+          ],
+          [
+            "account_mismatch",
+            "E1"
+          ]
+        ],
+        "aggregates": "unavailable"
+      }
+    },
+    {
+      "id": "missing_extra",
+      "label": "Missing Extra",
+      "description": "Candidate replaces E2 with extra E3.",
+      "file": "missing_extra.json",
+      "file_sha256": "733d66e995a9be0378c9392958faafa1ed4e1a0cad7eab01421fbd6bd51c0166",
+      "expected": {
+        "status": "blocked",
+        "primary": [
+          [
+            "event_missing",
+            "E2"
+          ],
+          [
+            "event_extra",
+            "E3"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "compensating_amounts",
+      "label": "Compensating Amounts",
+      "description": "Equal/opposite amount changes cancel at firm level.",
+      "file": "compensating_amounts.json",
+      "file_sha256": "2b68eeca674c7f937109f1b664f6f8ecc9691683534a36b21f6c067ec8257c96",
+      "expected": {
+        "status": "blocked",
+        "primary": [
+          [
+            "amount_mismatch",
+            "E1"
+          ],
+          [
+            "amount_mismatch",
+            "E2"
+          ]
+        ],
+        "account_deltas": {
+          "0001/USD": "25000",
+          "0002/USD": "-25000"
+        },
+        "USD_net_minor": "0"
+      }
+    },
+    {
+      "id": "mixed_currency",
+      "label": "Mixed Currency",
+      "description": "Separate USD and EUR balances with a changed event currency.",
+      "file": "mixed_currency.json",
+      "file_sha256": "55c9faab3d1309d779a95a90d2e6c0e9bfeac86571e7790c91af090a85542948",
+      "expected": {
+        "status": "blocked",
+        "primary": [
+          [
+            "currency_mismatch",
+            "E1"
+          ]
+        ],
+        "account_deltas": {
+          "0001/USD": "-100000",
+          "0001/EUR": "100000",
+          "0002/USD": "0"
+        }
+      }
+    },
+    {
+      "id": "timezone_equivalent",
+      "label": "Timezone Equivalent",
+      "description": "Different timezone strings represent the same instant.",
+      "file": "timezone_equivalent.json",
+      "file_sha256": "0b35d045c7e4f30aa8850ac8146b233abb21f642e9751dc750b9e2b40e3295d6",
+      "expected": {
+        "status": "ready_for_review",
+        "primary": []
+      }
+    },
+    {
+      "id": "malformed",
+      "label": "Malformed",
+      "description": "Invalid amount and naive timestamp records require quarantine.",
+      "file": "malformed.json",
+      "file_sha256": "49372b7c828920ea5f3ef058a21681b7999ad4c0a611bc18558e5f7b0398d0a3",
+      "expected": {
+        "status": "incomplete",
+        "primary": [],
+        "quarantined_count": 2,
+        "aggregates": "unavailable"
+      }
+    }
+  ]
+}

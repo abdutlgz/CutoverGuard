@@ -1,0 +1,50 @@
+{
+  "data_kind": "synthetic_benchmark",
+  "status": "verified_narrow_sql_experiment",
+  "completed_at": "2026-10-10T19:54:53.567588+00:00",
+  "source": "samples.tpch.orders",
+  "source_report_sha256": "e57d2379e65c307a75235e1387a88e1fbb24191ff484611467eaed245fce531f",
+  "row_count_per_side": 7500000,
+  "verification": {
+    "exact_injected_findings": true,
+    "independent_account_deltas": true,
+    "row_counts_preserved": true,
+    "amounts_dates_unchanged_full_join": true,
+    "total_scaled_units_preserved": true,
+    "owner_multiset_checksum_preserved": true,
+    "order_checksum_preserved": true,
+    "changed_owner_rows": 50,
+    "impacted_customer_buckets": 50,
+    "absolute_account_delta_scaled_units": "514218268"
+  },
+  "metric_columns": [
+    "side",
+    "rows",
+    "total_scaled_units",
+    "owner_checksum_unsigned64",
+    "order_checksum_unsigned64"
+  ],
+  "metric_rows": [
+    [
+      "candidate",
+      "7500000",
+      "113343921524625",
+      "7186124301794411862",
+      "15214096825819894155"
+    ],
+    [
+      "source",
+      "7500000",
+      "113343921524625",
+      "7186124301794411862",
+      "15214096825819894155"
+    ]
+  ],
+  "limitations": [
+    "Synthetic TPC-H wholesale benchmark, not observed bank data or an actual migration.",
+    "Amounts are arbitrary benchmark price units scaled by 100; no currency asserted.",
+    "Narrow order ownership/amount/date reconciliation, not full CutoverGuard engine equivalence.",
+    "Permutation-invariant owner checksum cannot detect swapped owners; exact order-key findings are required.",
+    "No GPU runtime, CPU/GPU comparison, or speedup is measured."
+  ]
+}

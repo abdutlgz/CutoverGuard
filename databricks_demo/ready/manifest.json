@@ -1,0 +1,54 @@
+{
+  "prefix": "cg_demo_a54027b9e561",
+  "pipeline_status": "prepared_not_executed",
+  "default_catalog": "workspace",
+  "default_schema": "default",
+  "source_reports": {
+    "defective": {
+      "run_id": "54f6cbc4c2d68289bde2a8b26dc0b28ae169a760544450ed75ad5189d8471974",
+      "tables": {
+        "manifest": "`workspace`.`default`.`cutoverguard_222947f1bcdd4351_manifest`",
+        "profiles": "`workspace`.`default`.`cutoverguard_222947f1bcdd4351_profiles`",
+        "transactions": "`workspace`.`default`.`cutoverguard_222947f1bcdd4351_transactions`",
+        "issues": "`workspace`.`default`.`cutoverguard_222947f1bcdd4351_issues`",
+        "impacts": "`workspace`.`default`.`cutoverguard_222947f1bcdd4351_impacts`",
+        "totals": "`workspace`.`default`.`cutoverguard_222947f1bcdd4351_totals`"
+      },
+      "statement_ids": [
+        "01f1c4b0-ea6c-1b53-9234-09b7722fe7bd",
+        "01f1c4b0-ed1d-1f63-8419-8583d955ca12",
+        "01f1c4b0-ef41-1bcd-bf0d-feea74f06c2b",
+        "01f1c4b0-f1ad-1dd8-b359-8c0baef9ebea",
+        "01f1c4b0-f5d5-12bb-ab9f-37b50c474ee3",
+        "01f1c4b0-f83f-1bb9-a25b-8fa59296b70d",
+        "01f1c4b0-fb53-1486-bf52-0a2efa06f416",
+        "01f1c4b0-fd0d-1522-b25f-b28e29d4a75f",
+        "01f1c4b0-fecc-12aa-85c0-fcdbbe5c038c"
+      ]
+    },
+    "fixed": {
+      "run_id": "3efd3744ace6d1363674e7f194da3dc3eb0c439f0f2361083ec78f176b25f9f6",
+      "tables": {
+        "manifest": "`workspace`.`default`.`cutoverguard_3c068b368cca461b_manifest`",
+        "profiles": "`workspace`.`default`.`cutoverguard_3c068b368cca461b_profiles`",
+        "transactions": "`workspace`.`default`.`cutoverguard_3c068b368cca461b_transactions`",
+        "issues": "`workspace`.`default`.`cutoverguard_3c068b368cca461b_issues`",
+        "impacts": "`workspace`.`default`.`cutoverguard_3c068b368cca461b_impacts`",
+        "totals": "`workspace`.`default`.`cutoverguard_3c068b368cca461b_totals`"
+      },
+      "statement_ids": [
+        "01f1c4b1-1e1d-1c8f-ba49-5389592ec8fe",
+        "01f1c4b1-203f-11f5-8e4e-8dc84d38b2cb",
+        "01f1c4b1-2213-1bc2-bc18-058c6bdf9609",
+        "01f1c4b1-23c9-1d41-afba-6790288a42c0",
+        "01f1c4b1-270e-197b-ab9e-f4b806205e9b",
+        "01f1c4b1-293d-1da5-8400-d7eb99d005ad",
+        "01f1c4b1-2b6d-1e6a-9b8d-a5b99d37c5a2",
+        "01f1c4b1-2d0f-1751-aba1-36f91c3de87c",
+        "01f1c4b1-2eb9-1038-befe-b1e5c2b99c82"
+      ]
+    }
+  },
+  "notebook_sha256": "aab32b7f52c0d5ede634b80d2a27aaf8e93ee3767bcebc98d41c1f50ea8740d6",
+  "pipeline_sha256": "613fadeead7a3863ffa27b9c662e590aecc3964b27e291b6a155ad24b585c52e"
+}

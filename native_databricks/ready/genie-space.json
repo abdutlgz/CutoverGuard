@@ -1,0 +1,185 @@
+{
+  "version": 2,
+  "config": {
+    "sample_questions": [
+      {
+        "id": "19f74c83de978874eaedd3df3c8a5ff2",
+        "question": [
+          "Which transaction account assignments changed?"
+        ]
+      },
+      {
+        "id": "3610f915f9337109a7b80a33ad3b8c04",
+        "question": [
+          "Why does the defective migration fail despite an unchanged total?"
+        ]
+      },
+      {
+        "id": "a6fbe76f345a69bdf79663f1c372b9d5",
+        "question": [
+          "Which accounts changed and by how much?"
+        ]
+      },
+      {
+        "id": "dc18ea1dabff28f219bbdf5cbcf9303c",
+        "question": [
+          "Did the corrected migration restore account parity?"
+        ]
+      }
+    ]
+  },
+  "data_sources": {
+    "tables": [
+      {
+        "identifier": "workspace.default.cutoverguard_222947f1bcdd4351_impacts",
+        "description": [
+          "defective synthetic impacts; exact results from verified SQL snapshot."
+        ]
+      },
+      {
+        "identifier": "workspace.default.cutoverguard_222947f1bcdd4351_issues",
+        "description": [
+          "defective synthetic issues; exact results from verified SQL snapshot."
+        ]
+      },
+      {
+        "identifier": "workspace.default.cutoverguard_222947f1bcdd4351_totals",
+        "description": [
+          "defective synthetic totals; exact results from verified SQL snapshot."
+        ]
+      },
+      {
+        "identifier": "workspace.default.cutoverguard_3c068b368cca461b_impacts",
+        "description": [
+          "fixed synthetic impacts; exact results from verified SQL snapshot."
+        ]
+      },
+      {
+        "identifier": "workspace.default.cutoverguard_3c068b368cca461b_issues",
+        "description": [
+          "fixed synthetic issues; exact results from verified SQL snapshot."
+        ]
+      },
+      {
+        "identifier": "workspace.default.cutoverguard_3c068b368cca461b_totals",
+        "description": [
+          "fixed synthetic totals; exact results from verified SQL snapshot."
+        ]
+      }
+    ]
+  },
+  "instructions": {
+    "text_instructions": [
+      {
+        "id": "8fd6fb8c26474aa775b30793765bd1a7",
+        "content": [
+          "All records are synthetic, designed examples; never present observed client failures or savings.\n",
+          "Use exact SQL results from the six listed Gold tables. Keep source versus candidate and defective versus fixed runs distinct. Always name the scenario and currency.\n",
+          "Amounts ending _minor are signed integer cents for USD/EUR (scale2). Derive display units in SQL with DECIMAL, never binary floating-point. Never combine currencies.\n",
+          "A zero firm-level net difference does not establish account ownership parity. USD2000 absolute allocation discrepancy is a double-sided discrepancy, not money lost. USD3000 affected notional is not a loss estimate.\n",
+          "Explain the two event-account mismatches with their original/candidate IDs and exact account effects. Preserve leading-zero account IDs as strings.\n",
+          "Genie explains SQL evidence; it cannot authorize a cutover or establish regulatory compliance. Metadata completeness remains supplied declarations. If evidence is missing or a query fails, state uncertainty rather than inventing an answer.\n",
+          "Only SELECT queries over the registered tables belong in this space. Do not suggest executing remediation, writes, schema changes or privilege changes. A human validates generated SQL and explanations.\n"
+        ]
+      }
+    ],
+    "example_question_sqls": [
+      {
+        "id": "0060377a79169c1ddf35c6c89b886e08",
+        "question": [
+          "Did the corrected migration restore account parity?"
+        ],
+        "sql": [
+          "SELECT 'defective' scenario, account_id label,currency,delta_minor,CAST(delta_minor/100 AS DECIMAL(38,2)) delta_major,'Account allocation difference' measure FROM `workspace`.`default`.`cutoverguard_222947f1bcdd4351_impacts` UNION ALL SELECT 'defective' scenario,'Firm net' label,currency,net_delta_minor delta_minor,CAST(net_delta_minor/100 AS DECIMAL(38,2)) delta_major,'Firm net difference' measure FROM `workspace`.`default`.`cutoverguard_222947f1bcdd4351_totals`\nUNION ALL\nSELECT 'fixed' scenario, account_id label,currency,delta_minor,CAST(delta_minor/100 AS DECIMAL(38,2)) delta_major,'Account allocation difference' measure FROM `workspace`.`default`.`cutoverguard_3c068b368cca461b_impacts` UNION ALL SELECT 'fixed' scenario,'Firm net' label,currency,net_delta_minor delta_minor,CAST(net_delta_minor/100 AS DECIMAL(38,2)) delta_major,'Firm net difference' measure FROM `workspace`.`default`.`cutoverguard_3c068b368cca461b_totals`"
+        ]
+      },
+      {
+        "id": "4068e79d1fdc5c2fae6fd000d775f9a5",
+        "question": [
+          "Which accounts changed and by how much?"
+        ],
+        "sql": [
+          "SELECT 'defective' scenario, account_id,currency,source_minor,candidate_minor,delta_minor,CAST(delta_minor/100 AS DECIMAL(38,2)) delta_major FROM `workspace`.`default`.`cutoverguard_222947f1bcdd4351_impacts`\nUNION ALL\nSELECT 'fixed' scenario, account_id,currency,source_minor,candidate_minor,delta_minor,CAST(delta_minor/100 AS DECIMAL(38,2)) delta_major FROM `workspace`.`default`.`cutoverguard_3c068b368cca461b_impacts`"
+        ]
+      },
+      {
+        "id": "7d9f37e92f4db46854bb7b5b2a96309c",
+        "question": [
+          "Why does the defective migration fail despite an unchanged total?"
+        ],
+        "sql": [
+          "SELECT 'defective' scenario, currency, source_minor, candidate_minor, net_delta_minor, absolute_account_delta_minor, affected_notional_minor, (SELECT count(*) FROM `workspace`.`default`.`cutoverguard_222947f1bcdd4351_issues`) primary_findings FROM `workspace`.`default`.`cutoverguard_222947f1bcdd4351_totals`\nUNION ALL\nSELECT 'fixed' scenario, currency, source_minor, candidate_minor, net_delta_minor, absolute_account_delta_minor, affected_notional_minor, (SELECT count(*) FROM `workspace`.`default`.`cutoverguard_3c068b368cca461b_issues`) primary_findings FROM `workspace`.`default`.`cutoverguard_3c068b368cca461b_totals`"
+        ]
+      },
+      {
+        "id": "f4babfbdad6b58e2cbe61b9aea7b7dc1",
+        "question": [
+          "Which transaction account assignments changed?"
+        ],
+        "sql": [
+          "SELECT 'defective' scenario, check_id,type,key,field,source_value,candidate_value FROM `workspace`.`default`.`cutoverguard_222947f1bcdd4351_issues`\nUNION ALL\nSELECT 'fixed' scenario, check_id,type,key,field,source_value,candidate_value FROM `workspace`.`default`.`cutoverguard_3c068b368cca461b_issues`"
+        ]
+      }
+    ]
+  },
+  "benchmarks": {
+    "questions": [
+      {
+        "id": "2e7b60c2df82dc5982bb17b621de1314",
+        "question": [
+          "Which accounts changed and by how much?"
+        ],
+        "answer": [
+          {
+            "format": "SQL",
+            "content": [
+              "SELECT 'defective' scenario, account_id,currency,source_minor,candidate_minor,delta_minor,CAST(delta_minor/100 AS DECIMAL(38,2)) delta_major FROM `workspace`.`default`.`cutoverguard_222947f1bcdd4351_impacts`\nUNION ALL\nSELECT 'fixed' scenario, account_id,currency,source_minor,candidate_minor,delta_minor,CAST(delta_minor/100 AS DECIMAL(38,2)) delta_major FROM `workspace`.`default`.`cutoverguard_3c068b368cca461b_impacts`"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "4ad9906d2b044cdd9bd9943c6453a097",
+        "question": [
+          "Which transaction account assignments changed?"
+        ],
+        "answer": [
+          {
+            "format": "SQL",
+            "content": [
+              "SELECT 'defective' scenario, check_id,type,key,field,source_value,candidate_value FROM `workspace`.`default`.`cutoverguard_222947f1bcdd4351_issues`\nUNION ALL\nSELECT 'fixed' scenario, check_id,type,key,field,source_value,candidate_value FROM `workspace`.`default`.`cutoverguard_3c068b368cca461b_issues`"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "5f685fc9f1d46ed002ba2c2463997e12",
+        "question": [
+          "Why does the defective migration fail despite an unchanged total?"
+        ],
+        "answer": [
+          {
+            "format": "SQL",
+            "content": [
+              "SELECT 'defective' scenario, currency, source_minor, candidate_minor, net_delta_minor, absolute_account_delta_minor, affected_notional_minor, (SELECT count(*) FROM `workspace`.`default`.`cutoverguard_222947f1bcdd4351_issues`) primary_findings FROM `workspace`.`default`.`cutoverguard_222947f1bcdd4351_totals`\nUNION ALL\nSELECT 'fixed' scenario, currency, source_minor, candidate_minor, net_delta_minor, absolute_account_delta_minor, affected_notional_minor, (SELECT count(*) FROM `workspace`.`default`.`cutoverguard_3c068b368cca461b_issues`) primary_findings FROM `workspace`.`default`.`cutoverguard_3c068b368cca461b_totals`"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "9175c69a40cbedc30002a075bcd2747c",
+        "question": [
+          "Did the corrected migration restore account parity?"
+        ],
+        "answer": [
+          {
+            "format": "SQL",
+            "content": [
+              "SELECT 'defective' scenario, account_id label,currency,delta_minor,CAST(delta_minor/100 AS DECIMAL(38,2)) delta_major,'Account allocation difference' measure FROM `workspace`.`default`.`cutoverguard_222947f1bcdd4351_impacts` UNION ALL SELECT 'defective' scenario,'Firm net' label,currency,net_delta_minor delta_minor,CAST(net_delta_minor/100 AS DECIMAL(38,2)) delta_major,'Firm net difference' measure FROM `workspace`.`default`.`cutoverguard_222947f1bcdd4351_totals`\nUNION ALL\nSELECT 'fixed' scenario, account_id label,currency,delta_minor,CAST(delta_minor/100 AS DECIMAL(38,2)) delta_major,'Account allocation difference' measure FROM `workspace`.`default`.`cutoverguard_3c068b368cca461b_impacts` UNION ALL SELECT 'fixed' scenario,'Firm net' label,currency,net_delta_minor delta_minor,CAST(net_delta_minor/100 AS DECIMAL(38,2)) delta_major,'Firm net difference' measure FROM `workspace`.`default`.`cutoverguard_3c068b368cca461b_totals`"
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -1,0 +1,280 @@
+{
+  "schema_version": "1.0",
+  "engine_version": "1.0.0",
+  "run_id": "3efd3744ace6d1363674e7f194da3dc3eb0c439f0f2361083ec78f176b25f9f6",
+  "data_kind": "synthetic",
+  "execution": {
+    "mode": "databricks",
+    "transport": "authenticated_cli",
+    "result_kind": "exported_snapshot",
+    "status": "verified",
+    "run_id": "3efd3744ace6d1363674e7f194da3dc3eb0c439f0f2361083ec78f176b25f9f6",
+    "tables": {
+      "manifest": "`workspace`.`default`.`cutoverguard_3c068b368cca461b_manifest`",
+      "profiles": "`workspace`.`default`.`cutoverguard_3c068b368cca461b_profiles`",
+      "transactions": "`workspace`.`default`.`cutoverguard_3c068b368cca461b_transactions`",
+      "issues": "`workspace`.`default`.`cutoverguard_3c068b368cca461b_issues`",
+      "impacts": "`workspace`.`default`.`cutoverguard_3c068b368cca461b_impacts`",
+      "totals": "`workspace`.`default`.`cutoverguard_3c068b368cca461b_totals`"
+    },
+    "warehouse_id": "515dff82a7a2c282",
+    "data_kind": "synthetic",
+    "started_at": "2026-10-10T13:47:21.329793+00:00",
+    "statement_ids": [
+      "01f1c4b1-1e1d-1c8f-ba49-5389592ec8fe",
+      "01f1c4b1-203f-11f5-8e4e-8dc84d38b2cb",
+      "01f1c4b1-2213-1bc2-bc18-058c6bdf9609",
+      "01f1c4b1-23c9-1d41-afba-6790288a42c0",
+      "01f1c4b1-270e-197b-ab9e-f4b806205e9b",
+      "01f1c4b1-293d-1da5-8400-d7eb99d005ad",
+      "01f1c4b1-2b6d-1e6a-9b8d-a5b99d37c5a2",
+      "01f1c4b1-2d0f-1751-aba1-36f91c3de87c",
+      "01f1c4b1-2eb9-1038-befe-b1e5c2b99c82"
+    ],
+    "oracle_comparison": {
+      "primary_findings_equal": true,
+      "account_impacts_equal": true,
+      "currency_totals_equal": true
+    },
+    "completed_at": "2026-10-10T13:47:52.547451+00:00",
+    "sql_issue_rows": [],
+    "sql_impact_rows": [
+      [
+        "0001",
+        "USD",
+        "100000",
+        "100000",
+        "0"
+      ],
+      [
+        "0002",
+        "USD",
+        "200000",
+        "200000",
+        "0"
+      ]
+    ],
+    "sql_total_rows": [
+      [
+        "USD",
+        "300000",
+        "300000",
+        "0",
+        "0",
+        "0"
+      ]
+    ]
+  },
+  "input_bundle": {
+    "schema_version": "1.0",
+    "data_kind": "synthetic",
+    "source": {
+      "snapshot_id": "synthetic-source-v1",
+      "captured_at": "2026-10-10T00:05:00Z",
+      "mapping_version": "source-map-v1",
+      "window_start": "2026-10-09T00:00:00Z",
+      "window_end": "2026-10-10T00:00:00Z",
+      "complete_through": "2026-10-10T00:00:00Z",
+      "profiles": [
+        {
+          "account_id": "0001",
+          "customer_id": "C1"
+        },
+        {
+          "account_id": "0002",
+          "customer_id": "C2"
+        }
+      ],
+      "transactions": [
+        {
+          "event_id": "E1",
+          "account_id": "0001",
+          "amount_minor": "100000",
+          "currency": "USD",
+          "event_time": "2026-10-09T12:00:00Z"
+        },
+        {
+          "event_id": "E2",
+          "account_id": "0002",
+          "amount_minor": "200000",
+          "currency": "USD",
+          "event_time": "2026-10-09T13:00:00Z"
+        }
+      ]
+    },
+    "candidate": {
+      "snapshot_id": "synthetic-candidate-fixed-v1",
+      "captured_at": "2026-10-10T00:05:00Z",
+      "mapping_version": "cloud-map-v1",
+      "window_start": "2026-10-09T00:00:00Z",
+      "window_end": "2026-10-10T00:00:00Z",
+      "complete_through": "2026-10-10T00:00:00Z",
+      "profiles": [
+        {
+          "account_id": "0001",
+          "customer_id": "C1"
+        },
+        {
+          "account_id": "0002",
+          "customer_id": "C2"
+        }
+      ],
+      "transactions": [
+        {
+          "event_id": "E1",
+          "account_id": "0001",
+          "amount_minor": "100000",
+          "currency": "USD",
+          "event_time": "2026-10-09T12:00:00Z"
+        },
+        {
+          "event_id": "E2",
+          "account_id": "0002",
+          "amount_minor": "200000",
+          "currency": "USD",
+          "event_time": "2026-10-09T13:00:00Z"
+        }
+      ]
+    },
+    "config": {
+      "rule_version": "1.0",
+      "currency_scales": {
+        "USD": 2,
+        "EUR": 2
+      }
+    },
+    "dependency_graph": {
+      "nodes": [
+        {
+          "id": "profiles",
+          "label": "Account master"
+        },
+        {
+          "id": "transactions",
+          "label": "Cash events"
+        },
+        {
+          "id": "account_cash",
+          "label": "Account cash report"
+        }
+      ],
+      "edges": [
+        {
+          "from": "profiles",
+          "to": "transactions"
+        },
+        {
+          "from": "transactions",
+          "to": "account_cash"
+        }
+      ]
+    }
+  },
+  "status": "ready_for_review",
+  "summary": {
+    "primary_issue_count": 0,
+    "impacted_account_count": 0,
+    "quarantined_count": 0,
+    "explanation": "Implemented checks pass under supplied declarations; human cutover review is still required."
+  },
+  "checks": [
+    {
+      "id": "identity",
+      "name": "Identity integrity",
+      "status": "pass",
+      "count": 0,
+      "description": "Exact comparison on declared snapshots; unavailable evidence remains visible."
+    },
+    {
+      "id": "transactions",
+      "name": "Transaction parity",
+      "status": "pass",
+      "count": 0,
+      "description": "Exact comparison on declared snapshots; unavailable evidence remains visible."
+    },
+    {
+      "id": "business",
+      "name": "Financial business parity",
+      "status": "pass",
+      "count": 0,
+      "description": "Exact comparison on declared snapshots; unavailable evidence remains visible."
+    }
+  ],
+  "issues": [],
+  "account_impacts": [
+    {
+      "account_id": "0001",
+      "currency": "USD",
+      "source_minor": "100000",
+      "candidate_minor": "100000",
+      "delta_minor": "0"
+    },
+    {
+      "account_id": "0002",
+      "currency": "USD",
+      "source_minor": "200000",
+      "candidate_minor": "200000",
+      "delta_minor": "0"
+    }
+  ],
+  "currency_totals": [
+    {
+      "currency": "USD",
+      "source_minor": "300000",
+      "candidate_minor": "300000",
+      "net_delta_minor": "0",
+      "absolute_account_delta_minor": "0",
+      "affected_notional_minor": "0"
+    }
+  ],
+  "quarantine": [],
+  "coverage": {
+    "source": {
+      "profile_rows": 2,
+      "transaction_rows": 2,
+      "in_window_rows": 2,
+      "excluded_rows": 0
+    },
+    "candidate": {
+      "profile_rows": 2,
+      "transaction_rows": 2,
+      "in_window_rows": 2,
+      "excluded_rows": 0
+    }
+  },
+  "limitations": [
+    "Synthetic fixtures are designed examples, not observed migration failure rates.",
+    "Completeness and lineage metadata are supplied declarations, not independently verified.",
+    "Only USD and EUR scale-2 minor units are supported; currencies are never combined.",
+    "Timestamps require timezones, supported UTC range and at most six fractional digits; greater precision is quarantined rather than truncated.",
+    "Candidate-minus-source deltas and affected notional are not losses or savings.",
+    "Ambiguous keys, invalid links or quarantined rows make financial aggregates unavailable.",
+    "Ready for review is not production approval, regulatory compliance or an automatic cutover."
+  ],
+  "dependency_graph": {
+    "nodes": [
+      {
+        "id": "profiles",
+        "label": "Account master"
+      },
+      {
+        "id": "transactions",
+        "label": "Cash events"
+      },
+      {
+        "id": "account_cash",
+        "label": "Account cash report"
+      }
+    ],
+    "edges": [
+      {
+        "from": "profiles",
+        "to": "transactions"
+      },
+      {
+        "from": "transactions",
+        "to": "account_cash"
+      }
+    ]
+  }
+}

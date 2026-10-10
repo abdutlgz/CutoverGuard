@@ -1,0 +1,54 @@
+{
+  "data_kind": "synthetic",
+  "scope": "allocation aggregation only; not full reconciliation",
+  "rows": 1000000,
+  "accounts": 10000,
+  "currency": "USD",
+  "minor_unit_scale": 2,
+  "device": "AMD Radeon Pro W7900D",
+  "torch_version": "2.13.0+rocm10.0.0",
+  "hip_version": "7.15.26333",
+  "cpu_threads": 64,
+  "exact_python_oracle_agreement": true,
+  "timing_boundary": "aggregation + transfers + host list conversion; one warmup excluded; oracle construction excluded",
+  "timings": {
+    "cpu": {
+      "seconds": [
+        0.002703651785850525,
+        0.002433761954307556,
+        0.0022152159363031387,
+        0.002188054844737053,
+        0.002161305397748947
+      ],
+      "median_seconds": 0.0022152159363031387
+    },
+    "rocm": {
+      "seconds": [
+        0.0016315393149852753,
+        0.0014358405023813248,
+        0.0013999305665493011,
+        0.0013840198516845703,
+        0.001392468810081482
+      ],
+      "median_seconds": 0.0013999305665493011
+    }
+  },
+  "cpu_over_rocm_ratio": 1.5823755757854765,
+  "net_delta_minor": "0",
+  "absolute_account_delta_minor": "200000",
+  "changed_accounts": [
+    {
+      "account_id": "00000000",
+      "delta_minor": "100000"
+    },
+    {
+      "account_id": "00000001",
+      "delta_minor": "-100000"
+    }
+  ],
+  "limitations": [
+    "Synthetic workload only. No production speedup extrapolation.",
+    "No identifier, duplicate, currency or completeness checks; main engine remains authoritative.",
+    "This compares CPU tensor aggregation to GPU tensor aggregation with exact Python-int agreement."
+  ]
+}

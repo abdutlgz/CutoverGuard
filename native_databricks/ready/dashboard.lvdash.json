@@ -1,0 +1,568 @@
+{
+  "datasets": [
+    {
+      "name": "review_summary",
+      "displayName": "Review Summary",
+      "queryLines": [
+        "SELECT 'defective' scenario, currency, source_minor, candidate_minor, net_delta_minor, absolute_account_delta_minor, affected_notional_minor, (SELECT count(*) FROM `workspace`.`default`.`cutoverguard_222947f1bcdd4351_issues`) primary_findings FROM `workspace`.`default`.`cutoverguard_222947f1bcdd4351_totals`\nUNION ALL\nSELECT 'fixed' scenario, currency, source_minor, candidate_minor, net_delta_minor, absolute_account_delta_minor, affected_notional_minor, (SELECT count(*) FROM `workspace`.`default`.`cutoverguard_3c068b368cca461b_issues`) primary_findings FROM `workspace`.`default`.`cutoverguard_3c068b368cca461b_totals`\n"
+      ]
+    },
+    {
+      "name": "ownership_findings",
+      "displayName": "Ownership Findings",
+      "queryLines": [
+        "SELECT 'defective' scenario, check_id,type,key,field,source_value,candidate_value FROM `workspace`.`default`.`cutoverguard_222947f1bcdd4351_issues`\nUNION ALL\nSELECT 'fixed' scenario, check_id,type,key,field,source_value,candidate_value FROM `workspace`.`default`.`cutoverguard_3c068b368cca461b_issues`\n"
+      ]
+    },
+    {
+      "name": "account_effects",
+      "displayName": "Account Effects",
+      "queryLines": [
+        "SELECT 'defective' scenario, account_id,currency,source_minor,candidate_minor,delta_minor,CAST(delta_minor/100 AS DECIMAL(38,2)) delta_major FROM `workspace`.`default`.`cutoverguard_222947f1bcdd4351_impacts`\nUNION ALL\nSELECT 'fixed' scenario, account_id,currency,source_minor,candidate_minor,delta_minor,CAST(delta_minor/100 AS DECIMAL(38,2)) delta_major FROM `workspace`.`default`.`cutoverguard_3c068b368cca461b_impacts`\n"
+      ]
+    },
+    {
+      "name": "zero_net_chart",
+      "displayName": "Zero Net Chart",
+      "queryLines": [
+        "SELECT 'defective' scenario, account_id label,currency,delta_minor,CAST(delta_minor/100 AS DECIMAL(38,2)) delta_major,'Account allocation difference' measure FROM `workspace`.`default`.`cutoverguard_222947f1bcdd4351_impacts` UNION ALL SELECT 'defective' scenario,'Firm net' label,currency,net_delta_minor delta_minor,CAST(net_delta_minor/100 AS DECIMAL(38,2)) delta_major,'Firm net difference' measure FROM `workspace`.`default`.`cutoverguard_222947f1bcdd4351_totals`\nUNION ALL\nSELECT 'fixed' scenario, account_id label,currency,delta_minor,CAST(delta_minor/100 AS DECIMAL(38,2)) delta_major,'Account allocation difference' measure FROM `workspace`.`default`.`cutoverguard_3c068b368cca461b_impacts` UNION ALL SELECT 'fixed' scenario,'Firm net' label,currency,net_delta_minor delta_minor,CAST(net_delta_minor/100 AS DECIMAL(38,2)) delta_major,'Firm net difference' measure FROM `workspace`.`default`.`cutoverguard_3c068b368cca461b_totals`\n"
+      ]
+    },
+    {
+      "name": "defective_kpis",
+      "displayName": "Defective Kpis",
+      "queryLines": [
+        "SELECT (SELECT count(*) FROM `workspace`.`default`.`cutoverguard_222947f1bcdd4351_issues`) primary_findings,CAST(net_delta_minor/100 AS DECIMAL(38,2)) net_delta_usd,CAST(absolute_account_delta_minor/100 AS DECIMAL(38,2)) absolute_account_delta_usd,CAST(affected_notional_minor/100 AS DECIMAL(38,2)) affected_notional_usd FROM `workspace`.`default`.`cutoverguard_222947f1bcdd4351_totals` WHERE currency='USD'\n"
+      ]
+    }
+  ],
+  "pages": [
+    {
+      "name": "review",
+      "displayName": "Migration review",
+      "pageType": "PAGE_TYPE_CANVAS",
+      "layout": [
+        {
+          "widget": {
+            "name": "story",
+            "multilineTextboxSpec": {
+              "lines": [
+                "# CutoverGuard\n",
+                "\n",
+                "**Same total. Different owner.** Synthetic migration snapshots: two ownership breaks, opposite account effects, zero firm net. Corrected replay restores parity. Differences and affected notional are not losses."
+              ]
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 0,
+            "width": 12,
+            "height": 3
+          }
+        },
+        {
+          "widget": {
+            "name": "kpi_primary_findings",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "defective_kpis",
+                  "fields": [
+                    {
+                      "name": "primary_findings",
+                      "expression": "`primary_findings`"
+                    }
+                  ],
+                  "disaggregated": true
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "primary_findings",
+                  "displayName": "Ownership breaks"
+                }
+              },
+              "frame": {
+                "showTitle": true,
+                "title": "Ownership breaks"
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 3,
+            "width": 3,
+            "height": 3
+          }
+        },
+        {
+          "widget": {
+            "name": "kpi_net_delta_usd",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "defective_kpis",
+                  "fields": [
+                    {
+                      "name": "net_delta_usd",
+                      "expression": "`net_delta_usd`"
+                    }
+                  ],
+                  "disaggregated": true
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "net_delta_usd",
+                  "displayName": "Firm net change (USD)"
+                }
+              },
+              "frame": {
+                "showTitle": true,
+                "title": "Firm net change (USD)"
+              }
+            }
+          },
+          "position": {
+            "x": 3,
+            "y": 3,
+            "width": 3,
+            "height": 3
+          }
+        },
+        {
+          "widget": {
+            "name": "kpi_absolute_account_delta_usd",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "defective_kpis",
+                  "fields": [
+                    {
+                      "name": "absolute_account_delta_usd",
+                      "expression": "`absolute_account_delta_usd`"
+                    }
+                  ],
+                  "disaggregated": true
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "absolute_account_delta_usd",
+                  "displayName": "Absolute allocation difference (USD)"
+                }
+              },
+              "frame": {
+                "showTitle": true,
+                "title": "Absolute allocation difference (USD)"
+              }
+            }
+          },
+          "position": {
+            "x": 6,
+            "y": 3,
+            "width": 3,
+            "height": 3
+          }
+        },
+        {
+          "widget": {
+            "name": "kpi_affected_notional_usd",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "defective_kpis",
+                  "fields": [
+                    {
+                      "name": "affected_notional_usd",
+                      "expression": "`affected_notional_usd`"
+                    }
+                  ],
+                  "disaggregated": true
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "affected_notional_usd",
+                  "displayName": "Changed transaction notional (USD)"
+                }
+              },
+              "frame": {
+                "showTitle": true,
+                "title": "Changed transaction notional (USD)"
+              }
+            }
+          },
+          "position": {
+            "x": 9,
+            "y": 3,
+            "width": 3,
+            "height": 3
+          }
+        },
+        {
+          "widget": {
+            "name": "allocation_bars",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "zero_net_chart",
+                  "fields": [
+                    {
+                      "name": "label",
+                      "expression": "`label`"
+                    },
+                    {
+                      "name": "delta_major",
+                      "expression": "`delta_major`"
+                    },
+                    {
+                      "name": "scenario",
+                      "expression": "`scenario`"
+                    }
+                  ],
+                  "disaggregated": true
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "widgetType": "bar",
+              "encodings": {
+                "x": {
+                  "fieldName": "label",
+                  "scale": {
+                    "type": "categorical"
+                  }
+                },
+                "y": {
+                  "fieldName": "delta_major",
+                  "scale": {
+                    "type": "quantitative"
+                  },
+                  "displayName": "Candidate \u2212 source (USD)"
+                },
+                "color": {
+                  "fieldName": "scenario",
+                  "scale": {
+                    "type": "categorical",
+                    "mappings": [
+                      {
+                        "value": "defective",
+                        "color": "#C75C3C"
+                      },
+                      {
+                        "value": "fixed",
+                        "color": "#247B75"
+                      }
+                    ]
+                  }
+                }
+              },
+              "frame": {
+                "showTitle": true,
+                "title": "Account allocation vs firm net \u2014 USD"
+              },
+              "mark": {
+                "layout": "group"
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 6,
+            "width": 7,
+            "height": 6
+          }
+        },
+        {
+          "widget": {
+            "name": "run_comparison",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "review_summary",
+                  "fields": [
+                    {
+                      "name": "scenario",
+                      "expression": "`scenario`"
+                    },
+                    {
+                      "name": "currency",
+                      "expression": "`currency`"
+                    },
+                    {
+                      "name": "primary_findings",
+                      "expression": "`primary_findings`"
+                    },
+                    {
+                      "name": "source_minor",
+                      "expression": "`source_minor`"
+                    },
+                    {
+                      "name": "candidate_minor",
+                      "expression": "`candidate_minor`"
+                    },
+                    {
+                      "name": "net_delta_minor",
+                      "expression": "`net_delta_minor`"
+                    }
+                  ],
+                  "disaggregated": true
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "widgetType": "table",
+              "encodings": {
+                "columns": [
+                  {
+                    "fieldName": "scenario",
+                    "displayName": "Scenario"
+                  },
+                  {
+                    "fieldName": "currency",
+                    "displayName": "Currency"
+                  },
+                  {
+                    "fieldName": "primary_findings",
+                    "displayName": "Primary Findings"
+                  },
+                  {
+                    "fieldName": "source_minor",
+                    "displayName": "Source Minor"
+                  },
+                  {
+                    "fieldName": "candidate_minor",
+                    "displayName": "Candidate Minor"
+                  },
+                  {
+                    "fieldName": "net_delta_minor",
+                    "displayName": "Net Delta Minor"
+                  }
+                ]
+              },
+              "frame": {
+                "showTitle": true,
+                "title": "Defective \u2192 corrected SQL runs"
+              }
+            }
+          },
+          "position": {
+            "x": 7,
+            "y": 6,
+            "width": 5,
+            "height": 6
+          }
+        },
+        {
+          "widget": {
+            "name": "ownership_evidence",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "ownership_findings",
+                  "fields": [
+                    {
+                      "name": "scenario",
+                      "expression": "`scenario`"
+                    },
+                    {
+                      "name": "key",
+                      "expression": "`key`"
+                    },
+                    {
+                      "name": "type",
+                      "expression": "`type`"
+                    },
+                    {
+                      "name": "source_value",
+                      "expression": "`source_value`"
+                    },
+                    {
+                      "name": "candidate_value",
+                      "expression": "`candidate_value`"
+                    }
+                  ],
+                  "disaggregated": true
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "widgetType": "table",
+              "encodings": {
+                "columns": [
+                  {
+                    "fieldName": "scenario",
+                    "displayName": "Scenario"
+                  },
+                  {
+                    "fieldName": "key",
+                    "displayName": "Key"
+                  },
+                  {
+                    "fieldName": "type",
+                    "displayName": "Type"
+                  },
+                  {
+                    "fieldName": "source_value",
+                    "displayName": "Source Value"
+                  },
+                  {
+                    "fieldName": "candidate_value",
+                    "displayName": "Candidate Value"
+                  }
+                ]
+              },
+              "frame": {
+                "showTitle": true,
+                "title": "Exact event ownership evidence"
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 12,
+            "width": 12,
+            "height": 5
+          }
+        },
+        {
+          "widget": {
+            "name": "account_effects",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "account_effects",
+                  "fields": [
+                    {
+                      "name": "scenario",
+                      "expression": "`scenario`"
+                    },
+                    {
+                      "name": "account_id",
+                      "expression": "`account_id`"
+                    },
+                    {
+                      "name": "currency",
+                      "expression": "`currency`"
+                    },
+                    {
+                      "name": "source_minor",
+                      "expression": "`source_minor`"
+                    },
+                    {
+                      "name": "candidate_minor",
+                      "expression": "`candidate_minor`"
+                    },
+                    {
+                      "name": "delta_minor",
+                      "expression": "`delta_minor`"
+                    }
+                  ],
+                  "disaggregated": true
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "widgetType": "table",
+              "encodings": {
+                "columns": [
+                  {
+                    "fieldName": "scenario",
+                    "displayName": "Scenario"
+                  },
+                  {
+                    "fieldName": "account_id",
+                    "displayName": "Account Id"
+                  },
+                  {
+                    "fieldName": "currency",
+                    "displayName": "Currency"
+                  },
+                  {
+                    "fieldName": "source_minor",
+                    "displayName": "Source Minor"
+                  },
+                  {
+                    "fieldName": "candidate_minor",
+                    "displayName": "Candidate Minor"
+                  },
+                  {
+                    "fieldName": "delta_minor",
+                    "displayName": "Delta Minor"
+                  }
+                ]
+              },
+              "frame": {
+                "showTitle": true,
+                "title": "Exact account effects \u2014 integer minor units"
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 17,
+            "width": 12,
+            "height": 5
+          }
+        }
+      ]
+    }
+  ],
+  "uiSettings": {
+    "theme": {
+      "canvasBackgroundColor": {
+        "light": "#F6F5F1",
+        "dark": "#14202C"
+      },
+      "widgetBackgroundColor": {
+        "light": "#FFFFFF",
+        "dark": "#1B2938"
+      },
+      "fontColor": {
+        "light": "#142B43",
+        "dark": "#F1F3F5"
+      },
+      "selectionColor": {
+        "light": "#247B75",
+        "dark": "#54B7A9"
+      },
+      "visualizationColors": [
+        "#C75C3C",
+        "#247B75",
+        "#416D9D",
+        "#C9A64C",
+        "#8463A6"
+      ],
+      "widgetHeaderAlignment": "LEFT"
+    }
+  }
+}

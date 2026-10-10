@@ -1,0 +1,7 @@
+{
+  "dashboard_api": "https://docs.databricks.com/api/lakeview/v1/create-dashboard",
+  "widget_schema": "https://github.com/databricks/databricks-agent-skills/blob/main/plugins/databricks/copilot/skills/databricks-aibi-dashboards/references/1-widget-specifications.md",
+  "dashboard_example": "https://github.com/databricks/databricks-agent-skills/blob/main/plugins/databricks/copilot/skills/databricks-aibi-dashboards/references/4-examples.md",
+  "genie_api": "https://docs.databricks.com/api/genie/v1/create-space",
+  "genie_validation": "https://docs.databricks.com/aws/en/genie-agents/conversation-api"
+}

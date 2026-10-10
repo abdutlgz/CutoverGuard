@@ -1,0 +1,285 @@
+{
+  "schema_version": "1.0",
+  "engine_version": "1.0.0",
+  "run_id": "30b59e9b940272a12b1f8c3089b4a7e0429cc968158f2c7f4568f00b3a290459",
+  "data_kind": "synthetic",
+  "execution": {
+    "mode": "local",
+    "engine_version": "1.0.0"
+  },
+  "input_bundle": {
+    "schema_version": "1.0",
+    "data_kind": "synthetic",
+    "source": {
+      "snapshot_id": "synthetic-source-v1",
+      "captured_at": "2026-10-10T00:05:00Z",
+      "mapping_version": "source-map-v1",
+      "window_start": "2026-10-09T00:00:00Z",
+      "window_end": "2026-10-10T00:00:00Z",
+      "complete_through": "2026-10-10T00:00:00Z",
+      "profiles": [
+        {
+          "account_id": "0001",
+          "customer_id": "C1"
+        },
+        {
+          "account_id": "0002",
+          "customer_id": "C2"
+        }
+      ],
+      "transactions": [
+        {
+          "event_id": "E1",
+          "account_id": "0001",
+          "amount_minor": "100000",
+          "currency": "USD",
+          "event_time": "2026-10-09T12:00:00Z"
+        },
+        {
+          "event_id": "E2",
+          "account_id": "0002",
+          "amount_minor": "200000",
+          "currency": "USD",
+          "event_time": "2026-10-09T13:00:00Z"
+        }
+      ]
+    },
+    "candidate": {
+      "snapshot_id": "synthetic-candidate-compensating_amounts-v1",
+      "captured_at": "2026-10-10T00:05:00Z",
+      "mapping_version": "cloud-map-v1",
+      "window_start": "2026-10-09T00:00:00Z",
+      "window_end": "2026-10-10T00:00:00Z",
+      "complete_through": "2026-10-10T00:00:00Z",
+      "profiles": [
+        {
+          "account_id": "0001",
+          "customer_id": "C1"
+        },
+        {
+          "account_id": "0002",
+          "customer_id": "C2"
+        }
+      ],
+      "transactions": [
+        {
+          "event_id": "E1",
+          "account_id": "0001",
+          "amount_minor": "125000",
+          "currency": "USD",
+          "event_time": "2026-10-09T12:00:00Z"
+        },
+        {
+          "event_id": "E2",
+          "account_id": "0002",
+          "amount_minor": "175000",
+          "currency": "USD",
+          "event_time": "2026-10-09T13:00:00Z"
+        }
+      ]
+    },
+    "config": {
+      "rule_version": "1.0",
+      "currency_scales": {
+        "USD": 2,
+        "EUR": 2
+      }
+    },
+    "dependency_graph": {
+      "nodes": [
+        {
+          "id": "profiles",
+          "label": "Account master"
+        },
+        {
+          "id": "transactions",
+          "label": "Cash events"
+        },
+        {
+          "id": "account_cash",
+          "label": "Account cash report"
+        }
+      ],
+      "edges": [
+        {
+          "from": "profiles",
+          "to": "transactions"
+        },
+        {
+          "from": "transactions",
+          "to": "account_cash"
+        }
+      ]
+    }
+  },
+  "status": "blocked",
+  "summary": {
+    "primary_issue_count": 2,
+    "impacted_account_count": 2,
+    "quarantined_count": 0,
+    "explanation": "Critical discrepancies block review."
+  },
+  "checks": [
+    {
+      "id": "identity",
+      "name": "Identity integrity",
+      "status": "pass",
+      "count": 0,
+      "description": "Exact comparison on declared snapshots; unavailable evidence remains visible."
+    },
+    {
+      "id": "transactions",
+      "name": "Transaction parity",
+      "status": "fail",
+      "count": 2,
+      "description": "Exact comparison on declared snapshots; unavailable evidence remains visible."
+    },
+    {
+      "id": "business",
+      "name": "Financial business parity",
+      "status": "fail",
+      "count": 2,
+      "description": "Exact comparison on declared snapshots; unavailable evidence remains visible."
+    }
+  ],
+  "issues": [
+    {
+      "check_id": "business",
+      "type": "account_balance_mismatch",
+      "severity": "critical",
+      "side": "both",
+      "key": "0001",
+      "field": "balance_minor",
+      "source_value": "100000",
+      "candidate_value": "125000",
+      "message": "Candidate minus source account balance differs; this is an allocation discrepancy, not a loss",
+      "evidence": {
+        "currency": "USD"
+      },
+      "issue_id": "b26688ba892dc6dcb8a62bc6"
+    },
+    {
+      "check_id": "business",
+      "type": "account_balance_mismatch",
+      "severity": "critical",
+      "side": "both",
+      "key": "0002",
+      "field": "balance_minor",
+      "source_value": "200000",
+      "candidate_value": "175000",
+      "message": "Candidate minus source account balance differs; this is an allocation discrepancy, not a loss",
+      "evidence": {
+        "currency": "USD"
+      },
+      "issue_id": "de68e047c3b0f21d580d1110"
+    },
+    {
+      "check_id": "transactions",
+      "type": "amount_mismatch",
+      "severity": "critical",
+      "side": "both",
+      "key": "E1",
+      "field": "amount_minor",
+      "source_value": "100000",
+      "candidate_value": "125000",
+      "message": "amount_minor differs for the same stable key",
+      "evidence": {
+        "source_account_id": "0001",
+        "candidate_account_id": "0001"
+      },
+      "issue_id": "0c1c4ab337ca5ac72d0cdbbb"
+    },
+    {
+      "check_id": "transactions",
+      "type": "amount_mismatch",
+      "severity": "critical",
+      "side": "both",
+      "key": "E2",
+      "field": "amount_minor",
+      "source_value": "200000",
+      "candidate_value": "175000",
+      "message": "amount_minor differs for the same stable key",
+      "evidence": {
+        "source_account_id": "0002",
+        "candidate_account_id": "0002"
+      },
+      "issue_id": "8071eca7d851bd350306a838"
+    }
+  ],
+  "account_impacts": [
+    {
+      "account_id": "0001",
+      "currency": "USD",
+      "source_minor": "100000",
+      "candidate_minor": "125000",
+      "delta_minor": "25000"
+    },
+    {
+      "account_id": "0002",
+      "currency": "USD",
+      "source_minor": "200000",
+      "candidate_minor": "175000",
+      "delta_minor": "-25000"
+    }
+  ],
+  "currency_totals": [
+    {
+      "currency": "USD",
+      "source_minor": "300000",
+      "candidate_minor": "300000",
+      "net_delta_minor": "0",
+      "absolute_account_delta_minor": "50000",
+      "affected_notional_minor": "300000"
+    }
+  ],
+  "quarantine": [],
+  "coverage": {
+    "source": {
+      "profile_rows": 2,
+      "transaction_rows": 2,
+      "in_window_rows": 2,
+      "excluded_rows": 0
+    },
+    "candidate": {
+      "profile_rows": 2,
+      "transaction_rows": 2,
+      "in_window_rows": 2,
+      "excluded_rows": 0
+    }
+  },
+  "limitations": [
+    "Synthetic fixtures are designed examples, not observed migration failure rates.",
+    "Completeness and lineage metadata are supplied declarations, not independently verified.",
+    "Declared scale-2 currencies: EUR, USD; currencies are never combined.",
+    "Timestamps require timezones, supported UTC range and at most six fractional digits; greater precision is quarantined rather than truncated.",
+    "Candidate-minus-source deltas and affected notional are not losses or savings.",
+    "Ambiguous keys, invalid links or quarantined rows make financial aggregates unavailable.",
+    "Ready for review is not production approval, regulatory compliance or an automatic cutover."
+  ],
+  "dependency_graph": {
+    "nodes": [
+      {
+        "id": "profiles",
+        "label": "Account master"
+      },
+      {
+        "id": "transactions",
+        "label": "Cash events"
+      },
+      {
+        "id": "account_cash",
+        "label": "Account cash report"
+      }
+    ],
+    "edges": [
+      {
+        "from": "profiles",
+        "to": "transactions"
+      },
+      {
+        "from": "transactions",
+        "to": "account_cash"
+      }
+    ]
+  }
+}

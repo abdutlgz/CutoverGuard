@@ -1,0 +1,16 @@
+.venv/
+.env
+.env.*
+__pycache__/
+.pytest_cache/
+*.pem
+*.key
+id_rsa*
+id_ed25519*
+.databrickscfg
+.DS_Store
+native_databricks/*/
+!native_databricks/ready/
+databricks_files/
+public_retail_validation/
+submission_build/
