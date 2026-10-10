@@ -83,7 +83,7 @@ For correction, run `corrected.sql` in a fresh evidence schema
 counts/totals and a ready decision. Regenerate the gate with
 `--evidence-schema cutoverguard_migration_fixed`, run it in a fresh promotion schema,
 and confirm the full expected promoted row count. Save both update IDs and results.
-Live pipeline compilation, gate failure and corrected promotion remain unverified.
+The defective evidence pipeline compiled and completed after a full refresh; promotion-gate failure and corrected promotion remain unverified.
 
 Databricks documents that a failed expectation can stop its flow while parallel
 flows proceed; separate orchestration provides stronger control. This two-stage
@@ -101,3 +101,13 @@ The generator now uses TIMESTAMP_LTZ with an explicit T00:00:00Z suffix on both 
 preserving the UTC-midnight convention without requiring timestampNtz on pipeline tables.
 Timestamp rendering can follow the session timezone; comparisons use the absolute instant.
 [Databricks timestamp type](https://docs.databricks.com/aws/en/sql/language-manual/data-types/timestamp-type).
+
+## Verified defective evidence run
+
+Update `59b5383f-bb13-4c3f-9c7e-a84c6ea8cc43` completed in the authenticated UI.
+The gold decision preview showed 7,500,000 source and candidate rows, 811 order findings,
+50 crosswalk findings, zero quarantined rows, zero duplicate crosswalk keys and blocked status.
+Both totals were 113343921524625 scaled price units. This is the crosswalk experiment,
+not the earlier 50-order swap experiment. The timestamp retry first encountered a missing
+internal materialization; full table refresh rebuilt the dedicated synthetic pipeline successfully.
+These observations do not prove the separate promotion gate rejected data.
