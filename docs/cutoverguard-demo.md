@@ -104,3 +104,7 @@ metadata are declarations. Passing checks requires subsequent human review.
 Supplied guide: Sunday October 11 Devpost 10 AM Eastern, all repository/code edits
 stop 11 AM. Aim to submit by 9 AM; verify organizer updates. Do not miss delivery
 for optional infrastructure or a broader replay.
+
+### Live Genie wording
+
+Ask: “Which customer has the largest positive allocation difference, and what is that difference in price units?” Verified answer: customer 92948, +3,096,745.42 price units. Call it an allocation difference, not profit. Use the clean `assets/demo/dashboard-pipeline.png` published-view capture; the orders counter is fully visible and the evidence table has no editing overlay.

@@ -55,10 +55,12 @@ def build_pipeline(report,retail,corrected,report_sha,bad,fixed):
         layout.append(x)
     layout += [widget('pipeline_crosswalk_counter','scale_kpis',['crosswalk_findings'],'counter','Wrong customer mappings',6,2,3,3,{'value':{'fieldName':'crosswalk_findings','displayName':'Wrong customer mappings'}})]
     # Four headline counters across one row; quarantine stays in the checklist.
-    counter_x={'scale_orders':0,'scale_wrong_owners':3,'pipeline_crosswalk_counter':6,'scale_total_difference_scaled':9}
+    counter_layout={'scale_orders':(0,4),'scale_wrong_owners':(4,3),'pipeline_crosswalk_counter':(7,2),'scale_total_difference_scaled':(9,3)}
     for x in layout:
         name=x['widget']['name']
-        if name in counter_x:x['position'].update(x=counter_x[name],y=2,width=3,height=3)
+        if name in counter_layout:
+            left,width=counter_layout[name]
+            x['position'].update(x=left,y=2,width=width,height=3)
     layout.append(widget('pipeline_corrected_replay','pipeline_replay',['scenario','source_rows','candidate_rows','order_findings','crosswalk_findings','net_price_difference','status'],'table','Defective → corrected · persisted gold decisions',0,27,12,5))
     page['layout']=layout
     body['pages'][2]['layout'][0]['widget']['multilineTextboxSpec']['lines']=['# Evidence and limitations\n',f'Live dashboard reads persisted gold tables in workspace.{bad} and workspace.{fixed}.\n','Independent count from the frozen source and the 50 authored swapped customer IDs: 811 affected orders.\n','Synthetic TPC-H benchmark; arbitrary price units, no currency. This crosswalk experiment differs from the earlier 50-order swap experiment.\n','Source dates are interpreted as explicit UTC-midnight instants. Deliberate mapping defects, not observed bank migration failures.\n','Promotion tests and update IDs are recorded separately. A ready review verdict is not production authorization.\n','Public retail tab uses historical UCI invoices with controlled candidate defects; DOI 10.24432/C5BW33, CC BY 4.0.\n','Keyed row-diff tools can detect ownership changes too; CutoverGuard adds signed effects, review decisions and a pipeline promotion gate.']

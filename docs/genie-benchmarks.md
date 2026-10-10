@@ -28,7 +28,7 @@ Question text, SQL ground truth and both run assessments are saved in [benchmark
 
 ## Manual demo checks
 
-The live conversation correctly reported 811 wrong-owner orders and 50 wrong mappings; 7,500,000 rows and 1,133,439,215,246.25 price units on both sides; and customer 92948 with +3,096,745.42 allocation difference. Cropped answer captures are in `assets/demo`. The colloquial “gained” question was answered as candidate allocation, but the safer demo wording is “largest positive allocation difference.” Neither phrasing establishes profit or realized loss.
+The live conversation correctly reported 811 wrong-owner orders and 50 wrong mappings; 7,500,000 rows and 1,133,439,215,246.25 price units on both sides; and customer 92948 with +3,096,745.42 allocation difference. Cropped answer captures are in `assets/demo`. The demo now asks “Which customer has the largest positive allocation difference, and what is that difference in price units?” The fresh answer matches customer 92948 and +3,096,745.42 price units. This measures allocation difference, not profit or realized loss.
 
 ![Initial benchmark: four of five](../assets/demo/genie-initial-benchmark.png)
 
