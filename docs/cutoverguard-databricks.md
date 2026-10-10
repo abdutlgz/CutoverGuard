@@ -12,8 +12,8 @@ No new token or external API is needed; this uses your existing Databricks CLI l
 From the KnightHacks project directory:
 
 ```sh
-.venv/bin/python scripts/run_cutoverguard_databricks.py --warehouse-id YOUR_WAREHOUSE_ID --fixture defective --output cutover_results/defective-cloud.json
-.venv/bin/python scripts/run_cutoverguard_databricks.py --warehouse-id YOUR_WAREHOUSE_ID --fixture fixed --output cutover_results/fixed-cloud.json
+.venv/bin/python scripts/run_cutoverguard_databricks.py --warehouse-id 515dff82a7a2c282 --fixture defective --output cutover_results/defective-cloud.json
+.venv/bin/python scripts/run_cutoverguard_databricks.py --warehouse-id 515dff82a7a2c282 --fixture fixed --output cutover_results/fixed-cloud.json
 ```
 
 May start serverless SQL compute. Defaults to `workspace.default`; set `--catalog`,

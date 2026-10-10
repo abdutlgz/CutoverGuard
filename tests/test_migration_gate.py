@@ -30,3 +30,13 @@ def test_only_crosswalk_transform_changes_in_corrected_variant():
     assert sum(x[2] for x in ledger)==sum(x[2] for x in candidate)
     assert sum(a[1]!=b[1] for a,b in zip(ledger,candidate))==4
     assert {owner:sum(x[2] for x in ledger if x[1]==owner) for owner in broken}=={owner:sum(x[2] for x in candidate if x[1]==owner) for owner in broken}
+
+
+def test_separate_promotion_reads_persisted_evidence_and_rejects_schema_injection():
+    import pytest
+    from scripts.build_migration_gate import promotion_sql
+    sql=promotion_sql('cutoverguard_migration_bad')
+    assert '`workspace`.`cutoverguard_migration_bad`.`gold_cutover_decision`' in sql
+    assert 'FAIL UPDATE' in sql and 'CROSS JOIN cutover_gate' in sql
+    assert 'bronze_legacy_orders' not in sql
+    with pytest.raises(ValueError):promotion_sql('bad; DROP SCHEMA default')

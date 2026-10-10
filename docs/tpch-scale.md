@@ -12,7 +12,7 @@ not observed banking data, real customer losses, or an actual migration.
 
 ```sh
 .venv/bin/python scripts/run_tpch_scale.py \
-  --warehouse-id YOUR_WAREHOUSE_ID --discover \
+  --warehouse-id 515dff82a7a2c282 --discover \
   --output tpch_results/discovery-001
 ```
 
@@ -27,7 +27,7 @@ choose a fresh directory for another discovery.
 
 ```sh
 .venv/bin/python scripts/run_tpch_scale.py \
-  --warehouse-id YOUR_WAREHOUSE_ID --execute \
+  --warehouse-id 515dff82a7a2c282 --execute \
   --output tpch_results/run-001
 ```
 
@@ -82,7 +82,7 @@ incremental customer effects; the full unmodified ledger is aggregated in SQL.
 
 ```sh
 .venv/bin/python scripts/run_tpch_scale.py \
-  --warehouse-id YOUR_WAREHOUSE_ID --execute --resume \
+  --warehouse-id 515dff82a7a2c282 --execute --resume \
   --output tpch_results/run-001
 ```
 

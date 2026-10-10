@@ -60,7 +60,7 @@ def build(report,retail,corrected,report_sha):
     layout.extend([
       widget('scale_checklist','scale_checks',['check_name','source_value','candidate_value','result_label'],'table','Same snapshots: five PASS checks, ownership BLOCKED',0,5,12,5),
       widget('scale_diverging','scale_effects',['customer','signed_price_units','direction'],'bar',f'{v["impacted_customer_buckets"]} customer effects • signed price units • net zero',0,10,12,7,{'x':{'fieldName':'customer','scale':{'type':'categorical'},'displayName':'Customer'},'y':{'fieldName':'signed_price_units','scale':{'type':'quantitative'},'displayName':'Candidate − source (price units)'},'color':{'fieldName':'direction','scale':{'type':'categorical','mappings':[{'value':'Increase','color':'#16803D'},{'value':'Decrease','color':'#DC2626'}]}}}),
-      widget('scale_orders','scale_drilldown',['order_key','original_owner','migrated_owner','price_units','order_date'],'table','Wrong-owner orders • largest price first',0,17,12,7),
+      widget('scale_order_drilldown','scale_drilldown',['order_key','original_owner','migrated_owner','price_units','order_date'],'table','Wrong-owner orders • largest price first',0,17,12,7),
     ])
     retail_part=retail_dashboard(retail)
     retail_layout=retail_part['pages'][0]['layout']
@@ -77,7 +77,21 @@ def build(report,retail,corrected,report_sha):
       {'name':'scale_main','displayName':'7.5 million orders' if report['discovery']['row_count']==7500000 else f"{report['discovery']['row_count']:,} orders",'pageType':'PAGE_TYPE_CANVAS','layout':layout},
       {'name':'public_retail','displayName':'Real public data','pageType':'PAGE_TYPE_CANVAS','layout':retail_layout},
       {'name':'evidence','displayName':'Evidence','pageType':'PAGE_TYPE_CANVAS','layout':[text('evidence_text',evidence_lines,0,0,12,10)]}]}
+    validate_structure(body)
     return body
+
+
+def validate_structure(body):
+    datasets=[x['name'] for x in body['datasets']]
+    if len(datasets)!=len(set(datasets)):raise ValueError('Duplicate dashboard dataset names.')
+    pages=[x['name'] for x in body['pages']]
+    if len(pages)!=len(set(pages)):raise ValueError('Duplicate dashboard page names.')
+    for page in body['pages']:
+        names=[x['widget']['name'] for x in page['layout']]
+        if len(names)!=len(set(names)):raise ValueError('Duplicate widget names on page '+page['name'])
+        for item in page['layout']:
+            for query in item['widget'].get('queries',[]):
+                if query['query']['datasetName'] not in datasets:raise ValueError('Unknown widget dataset.')
 
 
 def verify_queries(report,runner):

@@ -14,7 +14,7 @@ def report():
     impacts=[[a,'1000',str(1000+n),str(n)] for a,n in delta.items()]
     d={'row_count':7500000,'total_scaled_units':'123456789','owner_checksum_unsigned64':'987','order_checksum_unsigned64':'654'}
     metrics=[[side,'7500000','123456789','987','654'] for side in ('source','candidate')]
-    r={'status':'verified_narrow_sql_experiment','attempted':None,'data_kind':'synthetic_benchmark','completed':['source','mapping','candidate','issues','impacts','metrics'],'prefix':'tpch_swap_'+'a'*16,'warehouse_id':'test','swaps':swaps,'discovery':d,'issue_rows':issues,'account_effect_rows':impacts,'metric_rows':metrics,'timings':[{'elapsed_seconds':59.8}]}
+    r={'status':'verified_narrow_sql_experiment','attempted':None,'data_kind':'synthetic_benchmark','completed':['source','mapping','candidate','issues','impacts','metrics'],'prefix':'tpch_swap_'+'a'*16,'warehouse_id':'test','completed_at':'2026-10-10T20:00:00+00:00','swaps':swaps,'discovery':d,'issue_rows':issues,'account_effect_rows':impacts,'metric_rows':metrics,'timings':[{'elapsed_seconds':59.8}]}
     r['tables']=names('workspace','default',r['prefix']);r['verification']=verify(swaps,d,issues,impacts,metrics)
     return r
 
@@ -67,3 +67,15 @@ def test_pass_labels_do_not_verify_wrong_displayed_values():
             if self.n==2:rows[0][2]='1499'
             return rows
     with pytest.raises(CloudError,match='displayed'):verify_queries(report(),BadValues(report()))
+
+
+def test_native_widget_names_are_unique_and_duplicates_are_rejected():
+    from scripts.build_tpch_dashboard import build,validate_structure
+    from test_retail_dashboard import paired_reports
+    d,f=paired_reports();body=build(report(),d,f,'a'*64)
+    validate_structure(body)
+    names=[x['widget']['name'] for x in body['pages'][0]['layout']]
+    assert names.count('scale_orders')==1
+    assert 'scale_order_drilldown' in names
+    body['pages'][0]['layout'].append(deepcopy(body['pages'][0]['layout'][1]))
+    with pytest.raises(ValueError,match='Duplicate widget'):validate_structure(body)

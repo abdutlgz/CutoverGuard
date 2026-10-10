@@ -8,6 +8,8 @@ __pycache__/
 id_rsa*
 id_ed25519*
 .databrickscfg
+.redactions.json
+publication-manifest.json
 .DS_Store
 native_databricks/*/
 !native_databricks/ready/

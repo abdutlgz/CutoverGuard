@@ -5,6 +5,15 @@ BNY Financial Services Challenge and the Databricks challenge. It compares sourc
 and candidate account/transaction snapshots, exposes ownership errors hidden by
 matching totals, and exports exact evidence for human review.
 
+## Verified scale result
+
+**7,500,000 synthetic orders · matching totals and checksums · 50 wrong owners.**
+A separate Databricks SQL experiment found every deliberately swapped owner and
+verified signed customer effects summing to zero. TPC-H uses arbitrary price units,
+not a currency. This is a narrow SQL experiment, not full-engine performance.
+[Saved evidence](evidence/tpch-scale-summary.json) ·
+[Dashboard and migration gate](docs/tpch-dashboard-and-gate.md).
+
 ## Run locally
 
 ```sh

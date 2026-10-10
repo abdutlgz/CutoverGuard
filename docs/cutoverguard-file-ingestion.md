@@ -39,7 +39,7 @@ actual name; **no Volume with that name is assumed to exist**.
 
 ```sh
 .venv/bin/python scripts/run_cutoverguard_files.py \
-  --warehouse-id YOUR_WAREHOUSE_ID \
+  --warehouse-id 515dff82a7a2c282 \
   --volume workspace.default.your_existing_volume \
   --output databricks_files/retail-run-001 \
   --execute
@@ -92,7 +92,7 @@ List visible Volumes without changing resources (this may start SQL compute):
 
 ```sh
 .venv/bin/python scripts/setup_cutoverguard_volume.py \
-  --warehouse-id YOUR_WAREHOUSE_ID --list
+  --warehouse-id 515dff82a7a2c282 --list
 ```
 
 Visibility does not itself verify file write permission. If no suitable Volume
@@ -101,7 +101,7 @@ Volume with a collision-resistant name:
 
 ```sh
 .venv/bin/python scripts/setup_cutoverguard_volume.py \
-  --warehouse-id YOUR_WAREHOUSE_ID --create \
+  --warehouse-id 515dff82a7a2c282 --create \
   --output databricks_files/volume-001.json
 ```
 
@@ -111,7 +111,7 @@ failure saves the intended name and statement IDs. Read-back recovery is safe:
 
 ```sh
 .venv/bin/python scripts/setup_cutoverguard_volume.py \
-  --warehouse-id YOUR_WAREHOUSE_ID --resume \
+  --warehouse-id 515dff82a7a2c282 --resume \
   --output databricks_files/volume-001.json
 ```
 

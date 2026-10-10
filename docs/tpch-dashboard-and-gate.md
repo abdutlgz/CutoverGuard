@@ -1,103 +1,95 @@
-# TPC-H-first dashboard and migration gate
-
-The initial publication commit is `0074d3e`. Versioned intermediate output folders
-are excluded from the public repository; private recovery checkpoints are archived.
-Only final generated templates belong in `native_databricks/ready`.
+# TPC-H dashboard and two-stage migration gate
 
 ## Dashboard
+
+Run from the preparation workspace, where your verified scale and retail reports exist:
 
 ```sh
 .venv/bin/python scripts/build_tpch_dashboard.py --verify-sql
 ```
 
-Defaults use the author's verified scale report and paired historical-retail reports.
-On a fresh checkout, execute those workflows first and pass your saved paths with
-`--report`, `--retail`, and `--corrected`. The generator requires isolated, completed,
-verified evidence and matching warehouses. It writes one stable output directory:
-`native_databricks/final/CutoverGuard.lvdash.json`. Import this file through AI/BI
-Dashboards → Import dashboard. It has three pages:
+Import `native_databricks/final/CutoverGuard.lvdash.json`. The current generator
+checks unique dataset, page and per-page widget names before saving. Three pages:
+7.5 million orders; real public retail records; evidence and limitations.
+The ~60-second counter is the sum of recorded original query submission/poll/fetch
+intervals, not engine-only timing or a speedup. TPC-H uses arbitrary price units,
+not currency. The 700-trial study uses four aggregate controls; the scale dashboard
+adds an order-key checksum as a fifth control.
 
-1. **7.5 million orders:** counters, five distinct aggregate checks, signed customer
-   effects and wrong-owner order drill-down, largest price first.
-2. **Real public data:** historical UCI records and corrected replay, using GBP.
-3. **Evidence:** fingerprints, attribution, timing boundary and limitations.
+The new scale queries were executed successfully and verified against exact
+saved values, findings and customer effects. Visual rendering still needs inspection.
+A fresh public checkout must run the scale and retail workflows first and supply
+its own `--report`, `--retail`, and `--corrected` paths. Templates under
+`native_databricks/ready` use placeholders and are not live workspace evidence.
 
-The first page queries existing isolated TPC-H tables. The new daily-total check
-is verified by `--verify-sql`, alongside exact counters, signed customer effects
-and order-level drill-down. No tables are created. Compute may start. A successful
-check records `scale-query-verification.json`; inspect rendering after import.
+## Step 1: persist migration evidence
 
-TPC-H price units have no currency. The counter near 60 seconds is the sum of the
-recorded per-query CLI submission/poll/fetch intervals from the original run;
-discovery is separate. It is not engine-only runtime or a speedup claim.
-
-## Lakeflow migration experiment
-
-Creation of an empty serverless pipeline was confirmed in the user's workspace.
-This confirms creation access, not successful compute, SQL compilation, expectation
-behavior or a promotion block. Those need an executed defective/fixed pair.
+The blank Python transformation in an empty pipeline is not an execution failure.
+Configure and load SQL before running it.
 
 ```sh
-.venv/bin/python scripts/build_migration_gate.py
+.venv/bin/python scripts/build_migration_gate.py \
+  --evidence-schema cutoverguard_migration_bad
 ```
 
-This prepares `databricks_demo/migration-final/defective.sql` and `corrected.sql`.
-Use `--report` for your own verified scale report. Only the customer crosswalk
-expression differs between the two variants.
+This creates readable `defective.sql`, `corrected.sql`, and `promotion-gate.sql`
+in `databricks_demo/migration-final`. Use `--report` for your own scale report.
+The defective/corrected files now contain **evidence only**, with no failing gate
+and no promotion target. Run only one active transformation per pipeline.
 
-The legacy extract is the frozen 7.5M-order snapshot. A separately retained identity
-crosswalk defines the expected customer relation. The migration crosswalk swaps
-25 customer pairs. **Every order for those customers** is remapped, so the result
-is not the previous 50-order experiment and must not inherit its finding count.
-TPC-H has integer customer keys; this is a swapped-crosswalk demonstration,
-not an observed leading-zero collision or a real legacy migration.
-
-Bronze retains the legacy extract and both crosswalks. Silver types amounts as
-DECIMAL, interprets DATE at UTC midnight, checks keys and fields, retains invalid
-rows in explicit quarantine tables, and excludes them from the valid silver views.
-Gold performs keyed ownership/amount/date reconciliation, customer allocation
-aggregation and separate crosswalk checks. Its decision also checks quarantine,
-nonempty input, duplicate crosswalk keys, completeness counts and total parity.
-Legacy row count, total and owner/order checksum expectations are pinned to the
-saved verified extract manifest, so silently shrinking the legacy extract cannot
-pass by shrinking both sides. These aggregate manifest checks are not a
-cryptographic authentication of every source row; the frozen legacy extract remains
-the trusted reference for keyed comparison.
-
-The `cutover_gate` materialized view has a readable expectation:
+1. Use the empty serverless development pipeline. Set default catalog `workspace`
+   and create a dedicated schema `cutoverguard_migration_bad`; do not use `default`.
+2. Close settings. Choose SQL for the empty transformation (or create a SQL file),
+   and paste the full contents of `defective.sql`. Save.
+3. Click **Run pipeline**, not Run file. Wait for a completed update.
+4. In SQL Editor inspect:
 
 ```sql
-CONSTRAINT no_wrong_owner_promotion
-EXPECT (status = 'ready') ON VIOLATION FAIL UPDATE
+SELECT * FROM workspace.cutoverguard_migration_bad.gold_cutover_decision;
+SELECT count(*) FROM workspace.cutoverguard_migration_bad.gold_order_issues;
+SELECT * FROM workspace.cutoverguard_migration_bad.gold_customer_effects
+WHERE delta_scaled_units <> 0;
 ```
 
-`promoted_orders` explicitly depends on `cutover_gate`. A triggered pipeline may
-update independent diagnostic flows when the gate fails. The gate is not a global
-rollback, a production switch, a BNY integration or complete financial approval.
-A previously successful promotion can remain available after a later failed
-update; do not describe stale data as the bad candidate having been promoted.
+A succeeded run with persisted findings and a blocked decision is the evidence
+checkpoint. If compilation, permissions or compute fail, diagnose that error;
+it is not proof the financial gate worked.
 
-### Deploy and verify
+The swapped customer crosswalk remaps **every order** belonging to 50 selected
+customers. Do not reuse the original experiment's 50 wrong-owner-order count:
+this new count must be measured. Bronze retains legacy and crosswalk records;
+silver uses DECIMAL amounts, DATE interpreted at UTC midnight, typed keys and
+explicit quarantines. Gold checks row ownership, amounts, timestamps, crosswalk
+relations, duplicate keys, quarantine, completeness and matching totals. The legacy
+count, total and owner/order checksums are pinned to the verified extract manifest.
+These aggregates do not cryptographically authenticate every legacy row.
 
-1. Use one empty development pipeline; do not create another. Keep it **serverless**.
-   Enable the expectation-supporting edition if the workspace exposes that setting.
-2. Set its default catalog to `workspace` and a **new dedicated schema**, for example
-   `cutoverguard_migration_bad`. Never use production or the existing shared schema.
-3. In the blank transformation editor choose **SQL** and paste `defective.sql`.
-   Keep only this active transformation (do not include both variants).
-4. Run the pipeline. Save the update ID and inspect the actual error. The desired
-   error must name `no_wrong_owner_promotion`, not permissions or SQL compilation.
-   Inspect `gold_cutover_decision`, `gold_order_issues`, quarantine and customer effects.
-   Confirm no newly promoted bad orders exist. A generic red run is insufficient.
-5. Save the defective evidence first. Change to a second fresh schema such as
-   `cutoverguard_migration_fixed`, replace the active SQL with `corrected.sql`, and run.
-   Verify zero findings/quarantine, unchanged counts/totals, `ready` and the full
-   promoted row count. Do not reuse the original 50-order count as an expectation.
-6. Capture both runs. Describe the pipeline as prepared until these checks pass.
-   If serverless/expectations fail, retain the verified dashboard demonstration;
-   do not claim a job fallback exists unless it has been built and executed.
+## Step 2: test promotion separately
 
-[Databricks expectations](https://docs.databricks.com/aws/en/ldp/expectations)
-confirm fail-update behavior and the distinction between a failing flow and parallel
-flows. [SQL pipeline development](https://docs.databricks.com/aws/en/ldp/developer/sql-dev)
-documents materialized views. Checked October 10, 2026.
+Use a second empty serverless development pipeline in another new schema, e.g.
+`cutoverguard_promotion_bad`. Paste only `promotion-gate.sql`. It reads the persisted
+evidence from the first schema; it does not rebuild or erase those gold tables.
+Freeze the evidence schema while testing promotion. This prototype does not provide
+an atomic production cutover across concurrently changing tables.
+
+The gate has `EXPECT (status = 'ready') ON VIOLATION FAIL UPDATE`, and
+`promoted_orders` explicitly depends on it. Run this pipeline after Step 1 succeeds.
+The desired failure must name **no_wrong_owner_promotion**. Check that no bad
+candidate rows were newly promoted. A previously successful target can retain its
+old data after a failed update; stale rows are not a newly promoted bad candidate.
+
+For correction, run `corrected.sql` in a fresh evidence schema
+`cutoverguard_migration_fixed`. Verify zero findings/quarantine, unchanged full
+counts/totals and a ready decision. Regenerate the gate with
+`--evidence-schema cutoverguard_migration_fixed`, run it in a fresh promotion schema,
+and confirm the full expected promoted row count. Save both update IDs and results.
+Live pipeline compilation, gate failure and corrected promotion remain unverified.
+
+Databricks documents that a failed expectation can stop its flow while parallel
+flows proceed; separate orchestration provides stronger control. This two-stage
+workflow makes persisted evidence a prerequisite rather than assuming it survives
+a failing update. [Expectations documentation](https://docs.databricks.com/aws/en/ldp/expectations),
+[SQL pipeline development](https://docs.databricks.com/aws/en/ldp/developer/sql-dev).
+
+This is a controlled synthetic benchmark migration, not banking data, a leading-zero
+collision, full local-engine equivalence, production approval or a BNY integration.

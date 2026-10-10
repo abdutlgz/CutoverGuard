@@ -3,7 +3,7 @@
 -- belonging to the 50 selected customers. Actual new finding count must be measured.
 -- Prices have arbitrary units, no currency. Dates interpreted as UTC midnight.
 -- Use a NEW dedicated schema and a development pipeline. Never production.
--- Diagnostic flows can update in parallel; only promoted_orders depends on the gate.
+-- Evidence-only pipeline: no failing expectation and no promotion target.
 
 CREATE OR REFRESH MATERIALIZED VIEW bronze_legacy_orders AS
 SELECT order_id,account_id legacy_customer_id,amount_scaled_units,order_date FROM `workspace`.`default`.`YOUR_FROZEN_TPCH_SOURCE`;
@@ -186,10 +186,3 @@ AND legacy_rows=7500000 AND legacy_total=113343921524625
 AND legacy_owner_checksum='7186124301794411862' AND legacy_key_checksum='15214096825819894155'
 AND source_total<=>candidate_total THEN 'ready' ELSE 'blocked' END status FROM diagnostics;
 
-CREATE OR REFRESH MATERIALIZED VIEW cutover_gate (
-CONSTRAINT no_wrong_owner_promotion EXPECT (status = 'ready') ON VIOLATION FAIL UPDATE
-) AS SELECT * FROM gold_cutover_decision;
-
-CREATE OR REFRESH MATERIALIZED VIEW promoted_orders AS
-SELECT c.* FROM silver_candidate c CROSS JOIN cutover_gate g WHERE g.status='ready';
--- 'ready' is only this controlled pipeline's supported gate, NOT production approval.

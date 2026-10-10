@@ -121,12 +121,27 @@ SELECT c.* FROM silver_candidate c CROSS JOIN cutover_gate g WHERE g.status='rea
 
 
 def main():
-    p=argparse.ArgumentParser(description=__doc__);p.add_argument('--report',type=Path,default=ROOT/'tpch_results/run-001/report.json');p.add_argument('--output',type=Path,default=ROOT/'databricks_demo/migration-final');a=p.parse_args()
+    p=argparse.ArgumentParser(description=__doc__);p.add_argument('--report',type=Path,default=ROOT/'tpch_results/run-001/report.json');p.add_argument('--output',type=Path,default=ROOT/'databricks_demo/migration-final');p.add_argument('--evidence-schema',default='cutoverguard_migration_bad');a=p.parse_args()
     try:
         r=json.loads(a.report.read_text());a.output.mkdir(parents=True,exist_ok=True)
         for label,bug in [('defective',True),('corrected',False)]:
-            (a.output/(label+'.sql')).write_text(pipeline_sql(r,bug))
-        print('Prepared defective/corrected pipeline SQL. Execution and promotion blocking UNVERIFIED.')
+            sql=pipeline_sql(r,bug).split('CREATE OR REFRESH MATERIALIZED VIEW cutover_gate (')[0]
+            sql=sql.replace('-- Diagnostic flows can update in parallel; only promoted_orders depends on the gate.', '-- Evidence-only pipeline: no failing expectation and no promotion target.')
+            (a.output/(label+'.sql')).write_text(sql)
+        (a.output/'promotion-gate.sql').write_text(promotion_sql(a.evidence_schema))
+        print('Prepared evidence-only defective/corrected SQL and separate promotion gate. Live execution UNVERIFIED.')
         return 0
     except (ValueError,KeyError,OSError) as e:print('Preparation failed:',str(e));return 1
+def promotion_sql(evidence_schema):
+    if not re.fullmatch(r'[A-Za-z_][A-Za-z0-9_]*',evidence_schema):raise ValueError('Use a simple dedicated evidence schema.')
+    base='`workspace`.`'+evidence_schema+'`'
+    return f'''-- Separate promotion pipeline. Run only AFTER the evidence pipeline succeeds.
+-- Keep the evidence schema frozen while testing promotion; no production approval.
+CREATE OR REFRESH MATERIALIZED VIEW cutover_gate (
+CONSTRAINT no_wrong_owner_promotion EXPECT (status = 'ready') ON VIOLATION FAIL UPDATE
+) AS SELECT * FROM {base}.`gold_cutover_decision`;
+CREATE OR REFRESH MATERIALIZED VIEW promoted_orders AS
+SELECT c.* FROM {base}.`silver_candidate` c CROSS JOIN cutover_gate g WHERE g.status='ready';
+'''
+
 if __name__=='__main__':sys.exit(main())

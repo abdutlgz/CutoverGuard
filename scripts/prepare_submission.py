@@ -73,6 +73,18 @@ def sources(root):
 
 def transform(source, data):
     changes = []
+    configuration = ROOT / '.redactions.json'
+    if configuration.is_file():
+        rules = json.loads(configuration.read_text()).get('replacements', [])
+        for before, after in rules:
+            if not isinstance(before, str) or not before or not isinstance(after, str):
+                raise ValueError('Invalid local redaction configuration')
+            # Regex boundaries preserve numeric observations and hash fragments.
+            pattern = rb'(?<![A-Za-z0-9])' + re.escape(before.encode()) + rb'(?![A-Za-z0-9])'
+            updated = re.sub(pattern, lambda match: after.encode(), data)
+            if updated != data:
+                changes.append('Apply private local publication redaction')
+            data = updated
     if source.startswith('databricks_demo/migration-final/'):
         data = re.sub(rb'tpch_swap_[a-f0-9]{16}_source',b'YOUR_FROZEN_TPCH_SOURCE',data)
         changes.append('Replace private snapshot table with a portable placeholder')
@@ -86,10 +98,6 @@ def transform(source, data):
         text = text.replace('--create --resume --output native_databricks/run-001',
                             '--create --output native_databricks/new-run')
         text = text.replace('native_databricks/run-001', 'native_databricks/new-run')
-        text = text.replace('515dff82a7a2c282', 'YOUR_WAREHOUSE_ID')
-        text = text.replace('private employer data', 'private employer data')
-        if source == 'amd/README.md':
-            text = text.replace('YOUR_AMD_HOST', 'YOUR_AMD_HOST').replace('YOUR_SSH_PORT', 'YOUR_SSH_PORT')
         text = text.replace('.venv/bin/python scripts/check_environment.py --core', '.venv/bin/python -m pip check')
         text = text.replace('This is the bounded next Databricks demonstration requested in `SummaryAndReview/review.md`.',
                             'This is a bounded, prepared Databricks file-ingestion demonstration.')
@@ -189,7 +197,7 @@ def prepare(root, destination, run_tests=True):
         manifest['files'].append({'source': source, 'target': target, 'source_sha256': sha(raw),
                                   'staged_sha256': sha(value), 'transformations': changes})
     (destination / 'requirements.txt').write_text('pytest>=9,<10\n# Runtime uses the standard library. Optional: openpyxl for XLSX; PyTorch ROCm on AMD only.\n')
-    (destination / '.gitignore').write_text('.venv/\n.env\n.env.*\n__pycache__/\n.pytest_cache/\n*.pem\n*.key\nid_rsa*\nid_ed25519*\n.databrickscfg\n.DS_Store\nnative_databricks/*/\n!native_databricks/ready/\ndatabricks_files/\npublic_retail_validation/\nsubmission_build/\n')
+    (destination / '.gitignore').write_text('.venv/\n.env\n.env.*\n__pycache__/\n.pytest_cache/\n*.pem\n*.key\nid_rsa*\nid_ed25519*\n.databrickscfg\n.redactions.json\npublication-manifest.json\n.DS_Store\nnative_databricks/*/\n!native_databricks/ready/\ndatabricks_files/\npublic_retail_validation/\nsubmission_build/\n')
     preview = subprocess.run([sys.executable, 'scripts/build_cutover_preview.py'], cwd=destination,
                              capture_output=True, timeout=30)
     if preview.returncode:
