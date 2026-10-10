@@ -73,7 +73,7 @@
    "name": "pipeline_replay",
    "displayName": "Pipeline Replay",
    "queryLines": [
-    "SELECT 'Defective migration' scenario,source_rows,candidate_rows,order_findings,crosswalk_findings,CAST((candidate_total-source_total)/100 AS DECIMAL(38,2)) net_price_difference,CASE status WHEN 'blocked' THEN '🔴 BLOCKED' ELSE status END status,'🔴 Gate FAILED · nothing promoted' promotion FROM `workspace`.`cutoverguard_migration_bad`.gold_cutover_decision UNION ALL SELECT 'Corrected migration',source_rows,candidate_rows,order_findings,crosswalk_findings,CAST((candidate_total-source_total)/100 AS DECIMAL(38,2)),CASE status WHEN 'ready' THEN '🟢 READY for human review' ELSE status END,'🟢 Gate PASSED · '||format_number((SELECT count(*) FROM `workspace`.`cutoverguard_promotion_fixed`.promoted_orders),0)||' rows promoted' FROM `workspace`.`cutoverguard_migration_fixed`.gold_cutover_decision\n"
+    "SELECT 'Defective migration' scenario,format_number(source_rows,0) source_rows,format_number(candidate_rows,0) candidate_rows,order_findings,crosswalk_findings,CAST((candidate_total-source_total)/100 AS DECIMAL(38,2)) net_price_difference,CASE status WHEN 'blocked' THEN '🔴 BLOCKED' ELSE status END status,'🔴 Gate FAILED · nothing promoted' promotion FROM `workspace`.`cutoverguard_migration_bad`.gold_cutover_decision UNION ALL SELECT 'Corrected migration',format_number(source_rows,0),format_number(candidate_rows,0),order_findings,crosswalk_findings,CAST((candidate_total-source_total)/100 AS DECIMAL(38,2)),CASE status WHEN 'ready' THEN '🟢 READY for human review' ELSE status END,'🟢 Gate PASSED · '||format_number((SELECT count(*) FROM `workspace`.`cutoverguard_promotion_fixed`.promoted_orders),0)||' rows promoted' FROM `workspace`.`cutoverguard_migration_fixed`.gold_cutover_decision\n"
    ]
   }
  ],
@@ -367,7 +367,7 @@
            }
           ]
          },
-         "displayName": "Allocation"
+         "displayName": "Change"
         }
        },
        "frame": {

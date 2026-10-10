@@ -200,3 +200,7 @@ The included cloud reports and native payloads capture the original synthetic de
 The new migration-review Genie space reads the pipeline gold tables. Five SQL-grounded benchmarks scored 4/5 initially; one missing price-unit conversion was fixed with a curated SQL example, then the unchanged suite scored 5/5. This is a tuned five-question regression test, not a general reliability claim. See [benchmark method and evidence](docs/genie-benchmarks.md).
 
 ![Genie answers over the pipeline gold tables](docs/images/genie-answers.png)
+
+## License
+
+Code is released under the [MIT License](LICENSE). Data keeps its own terms: UCI Online Retail is CC BY 4.0 (DOI 10.24432/C5BW33); TPC-H sample tables are used as provided in Databricks `samples`.
