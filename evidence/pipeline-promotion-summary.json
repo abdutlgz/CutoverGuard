@@ -1,0 +1,54 @@
+{
+  "independent_count": {
+    "orders": 811,
+    "customers": 50,
+    "query_file_id": "1456540545852043",
+    "query_source": "Frozen source filtered by literal authored customer IDs, not gold findings",
+    "observed_in_authenticated_ui": true
+  },
+  "defective": {
+    "pipeline_id": "415cde36-7732-4fc8-87f3-68f33e6362ca",
+    "update_id": "72307ca9-7504-4ad9-8d2c-b76d8b59e38a",
+    "status": "FAILED",
+    "violated_expectation": "no_wrong_owner_promotion",
+    "promoted_orders": "SKIPPED; table absent",
+    "catalog_count": 0,
+    "catalog_query_file_id": "1456540545852048",
+    "signed_effect_net_scaled": 0,
+    "changed_customer_buckets": 50
+  },
+  "corrected": {
+    "evidence_pipeline_id": "4232e55a-4333-4fa7-bf98-52152f7e6ef7",
+    "evidence_update_id": "524f67e5-2067-4c78-aad9-0ee842751d64",
+    "status": "COMPLETED",
+    "evidence_order_findings": 0,
+    "evidence_crosswalk_findings": 0,
+    "promotion_pipeline_id": "6b1f7687-8488-476a-954c-cad4673c8372",
+    "promotion_update_id": "069c50a5-e7fb-47a6-9b6e-3e672acd468e",
+    "gate_status": "ready",
+    "promoted_rows": 7500000,
+    "promoted_row_differences": 0,
+    "verification_query_file_id": "1456540545852048"
+  },
+  "screenshots": "Retained locally; authenticated UI screenshots excluded from publication package.",
+  "dashboard": {
+    "dashboard_id": "01f1c4dc6548108cb506484b745002f2",
+    "status": "draft_updated_and_rendering_verified",
+    "gold_evidence_schemas": [
+      "workspace.cutoverguard_migration_bad",
+      "workspace.cutoverguard_migration_fixed"
+    ],
+    "observed_counters": {
+      "orders": 7500000,
+      "wrong_owner_orders": 811,
+      "wrong_customer_mappings": 50,
+      "total_difference_scaled": 0
+    },
+    "replay": {
+      "defective": "blocked",
+      "corrected": "ready"
+    },
+    "retail_rendering_verified": true,
+    "published": false
+  }
+}

@@ -83,7 +83,7 @@ For correction, run `corrected.sql` in a fresh evidence schema
 counts/totals and a ready decision. Regenerate the gate with
 `--evidence-schema cutoverguard_migration_fixed`, run it in a fresh promotion schema,
 and confirm the full expected promoted row count. Save both update IDs and results.
-The defective evidence pipeline compiled and completed after a full refresh; promotion-gate failure and corrected promotion remain unverified.
+Both isolated promotion tests now ran: defective rejected on `no_wrong_owner_promotion`; corrected passed and promoted 7,500,000 rows. See the verified results below.
 
 Databricks documents that a failed expectation can stop its flow while parallel
 flows proceed; separate orchestration provides stronger control. This two-stage
@@ -110,4 +110,50 @@ The gold decision preview showed 7,500,000 source and candidate rows, 811 order 
 Both totals were 113343921524625 scaled price units. This is the crosswalk experiment,
 not the earlier 50-order swap experiment. The timestamp retry first encountered a missing
 internal materialization; full table refresh rebuilt the dedicated synthetic pipeline successfully.
-These observations do not prove the separate promotion gate rejected data.
+The separate promotion tests below establish the gate behavior on these frozen demonstration snapshots.
+
+
+## Verified independent count and promotion tests
+
+An independent SQL filter on the frozen source, using the 50 literal authored customer IDs,
+returned **811 orders across 50 customers**. It did not read the gold findings.
+The reproducible query is `evidence/independent-crosswalk-count.sql`.
+
+| Test | Observed result |
+| --- | --- |
+| Defective promotion | FAILED on `no_wrong_owner_promotion`; downstream output SKIPPED |
+| Defective output catalog check | 0 `promoted_orders` tables in its fresh target schema |
+| Corrected evidence | 0 ownership findings, 0 crosswalk findings, 0 quarantined records |
+| Corrected promotion | COMPLETED, gate expectation met; 7,500,000 promoted rows |
+| Corrected output versus silver source | 0 differences in keyed owners, amounts and UTC instants |
+| Defective customer effects | 50 changed buckets, signed effects sum exactly to 0 |
+
+Defective promotion update: `72307ca9-7504-4ad9-8d2c-b76d8b59e38a`.
+Corrected evidence update: `524f67e5-2067-4c78-aad9-0ee842751d64`.
+Corrected promotion update: `069c50a5-e7fb-47a6-9b6e-3e672acd468e`.
+Read-only checks are in `evidence/verify-pipeline-promotion.sql`.
+Authenticated UI observations and screenshots are retained locally in
+`native_databricks/final/promotion-tests.json` and `evidence/screenshots`.
+
+The corrected pipeline initially discovered no tables before the source edit was persisted.
+The final successful update uses a source directory glob; wait for the editor's saved edit
+indicator before starting a run or navigating away. Stop idle pipeline compute after
+verification to free Free Edition capacity; persisted evidence remains queryable.
+
+## Pipeline gold dashboard
+
+Build `native_databricks/final/CutoverGuard-pipeline.lvdash.json` with
+`python scripts/build_pipeline_dashboard.py`. Its main page reads persisted gold tables
+from the defective and corrected evidence schemas, including counters, signed customer
+effects, order drill-down, and the two gold decisions. The public retail page remains.
+This is a different experiment from the earlier 50-order swap: the 50 faulty customer
+mappings affect 811 orders. The owner multiset checksum need not pass after whole
+customer histories are remapped; the dashboard makes no unchanged-checksum claim.
+
+
+The live draft dashboard was replaced with this pipeline gold version and all three
+pages were visually inspected. The main page rendered 7.5M / 811 / 50 / 0 counters,
+red blocked ownership/crosswalk checks, green aggregate/quarantine checks, signed
+customer bars, sorted wrong-owner order detail and defective/ready comparison rows.
+Screenshots are saved locally; the dashboard was not published.
+For a fresh checkout supply your own `--report`, `--retail`, and `--corrected` paths.

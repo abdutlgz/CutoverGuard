@@ -5,14 +5,21 @@ BNY Financial Services Challenge and the Databricks challenge. It compares sourc
 and candidate account/transaction snapshots, exposes ownership errors hidden by
 matching totals, and exports exact evidence for human review.
 
-## Verified scale result
+## Verified migration pipeline
 
-**7,500,000 synthetic orders · matching totals and checksums · 50 wrong owners.**
-A separate Databricks SQL experiment found every deliberately swapped owner and
-verified signed customer effects summing to zero. TPC-H uses arbitrary price units,
-not a currency. This is a narrow SQL experiment, not full-engine performance.
-[Saved evidence](evidence/tpch-scale-summary.json) ·
+**7,500,000 synthetic orders · 50 faulty customer mappings · 811 wrong-owner orders.**
+An independent frozen-source SQL count confirmed all 811 affected orders. The defective
+promotion failed on `no_wrong_owner_promotion` and created no promotion output table.
+The corrected promotion passed: 7,500,000 rows, zero keyed owner/amount/time differences
+against its silver source. Signed effects across 50 customer buckets sum exactly to zero.
+The native dashboard reads the persisted pipeline gold tables and its rendering was checked.
+TPC-H uses arbitrary price units, not currency; these are deliberate demonstration defects.
+[Saved pipeline evidence](evidence/pipeline-promotion-summary.json) ·
 [Dashboard and migration gate](docs/tpch-dashboard-and-gate.md).
+
+An earlier, separate SQL experiment swapped **50 order owners**, preserving totals and
+owner/key checksums. Its [saved evidence](evidence/tpch-scale-summary.json) remains a
+separate experiment; whole-customer crosswalk remapping need not preserve owner checksums.
 
 ## Run locally
 
@@ -100,9 +107,9 @@ financial allocation effects and evidence for human review.
 The final dashboard generator puts the TPC-H run first, followed by real public
 records and a single evidence page. It adds a fifth aggregate control (order-key
 checksum); the 700-trial study retains its documented four-control baseline.
-The crosswalk migration generator prepares a Lakeflow promotion gate, with
-separate defective/corrected SQL. Empty serverless pipeline creation is confirmed;
-live gate failure and corrected promotion remain unverified.
+The crosswalk migration generator uses separate evidence and promotion pipelines.
+Both defective rejection and corrected promotion were executed and independently checked.
+The pipeline dashboard builder reads their persisted gold evidence.
 See [dashboard and gate deployment](docs/tpch-dashboard-and-gate.md).
 
 The dollar-valued native counter update has passed live SQL/configuration verification;

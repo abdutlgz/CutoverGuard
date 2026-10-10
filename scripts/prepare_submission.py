@@ -20,19 +20,21 @@ SCRIPTS = ('build_cutover_examples.py', 'build_cutover_preview.py', 'build_datab
            'inspect_cutoverguard_upload.py',
            'validate_public_retail.py', 'radeon_ssh.sh', 'prepare_submission.py',
            'run_defect_experiment.py','run_tpch_scale.py','verify_aggregate_baseline.py',
-           'build_tpch_dashboard.py','build_migration_gate.py')
+           'build_tpch_dashboard.py','build_migration_gate.py','build_pipeline_dashboard.py')
 TESTS = ('test_cutover_engine.py', 'test_cutover_databricks.py', 'test_cutover_http.py',
          'test_cutover_replay.py', 'test_databricks_demo.py', 'test_native_databricks.py',
          'test_public_retail.py', 'test_amd_ledger.py', 'test_dashboard_dollars.py',
          'test_file_ingestion.py', 'test_volume_setup.py', 'test_upload_inspection.py',
          'test_historical_cloud_import.py', 'test_retail_dashboard.py', 'test_prepare_submission.py',
          'test_retail_genie.py','test_aggregate_baseline.py','test_defect_experiment.py',
-         'test_tpch_scale.py','test_baseline_verification.py','test_tpch_dashboard.py','test_migration_gate.py')
+         'test_tpch_scale.py','test_baseline_verification.py','test_tpch_dashboard.py','test_migration_gate.py','test_pipeline_dashboard.py')
 DOCS = ('contract', 'databricks', 'native', 'real-data', 'file-ingestion', 'demo')
 EVIDENCE = ('cutover_results/defective-cloud-v2.json', 'cutover_results/fixed-cloud.json',
             'databricks_files/retail-run-002/verification-summary.json',
             'amd_results/benchmark-1m.VAll9q.json','experiments/randomized-002.json','experiments/randomized-002.md',
-            'evidence/tpch-scale-summary.json','evidence/aggregate-checks-summary.json')
+            'evidence/tpch-scale-summary.json','evidence/aggregate-checks-summary.json',
+            'evidence/independent-crosswalk-count.sql','evidence/verify-pipeline-promotion.sql',
+            'evidence/pipeline-promotion-summary.json')
 EXCLUDED = ['.env and credentials/keys', '.venv and caches', 'prep except selected public guides',
             'AGENTS.md and SummaryAndReview', 'AlphaAudit app.py/alpha_audit/static/examples',
             'native run state and diagnostics', 'raw public dataset and generated retail extracts',
@@ -85,7 +87,7 @@ def transform(source, data):
             if updated != data:
                 changes.append('Apply private local publication redaction')
             data = updated
-    if source.startswith('databricks_demo/migration-final/'):
+    if source.startswith('databricks_demo/migration-final/') or source == 'evidence/independent-crosswalk-count.sql':
         data = re.sub(rb'tpch_swap_[a-f0-9]{16}_source',b'YOUR_FROZEN_TPCH_SOURCE',data)
         changes.append('Replace private snapshot table with a portable placeholder')
     if source.endswith('.md'):
