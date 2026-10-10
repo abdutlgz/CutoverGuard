@@ -1,0 +1,1179 @@
+{
+ "datasets": [
+  {
+   "name": "retail_replay",
+   "displayName": "Retail Replay",
+   "queryLines": [
+    "SELECT 'defective' scenario,CAST(absolute_account_delta_minor/100 AS DECIMAL(38,2)) absolute_difference_major,(SELECT count(*) FROM `workspace`.`default`.`cutoverguard_fafd9a2bdcc74b3b_issues`) findings FROM `workspace`.`default`.`cutoverguard_fafd9a2bdcc74b3b_totals` WHERE currency='GBP' UNION ALL SELECT 'corrected',CAST(absolute_account_delta_minor/100 AS DECIMAL(38,2)),(SELECT count(*) FROM `workspace`.`default`.`cutoverguard_0b5f1d4d1d5f4ca0_issues`) FROM `workspace`.`default`.`cutoverguard_0b5f1d4d1d5f4ca0_totals` WHERE currency='GBP'\n"
+   ]
+  },
+  {
+   "name": "retail_kpis",
+   "displayName": "Retail Kpis",
+   "queryLines": [
+    "SELECT (SELECT count(*) FROM `workspace`.`default`.`cutoverguard_fafd9a2bdcc74b3b_issues`) primary_findings,currency,CAST(source_minor/100 AS DECIMAL(38,2)) source_major,CAST(candidate_minor/100 AS DECIMAL(38,2)) candidate_major,CAST(net_delta_minor/100 AS DECIMAL(38,2)) net_delta_major,CAST(absolute_account_delta_minor/100 AS DECIMAL(38,2)) absolute_delta_major,CAST(affected_notional_minor/100 AS DECIMAL(38,2)) affected_major FROM `workspace`.`default`.`cutoverguard_fafd9a2bdcc74b3b_totals` WHERE currency='GBP'\n"
+   ]
+  },
+  {
+   "name": "retail_findings",
+   "displayName": "Retail Findings",
+   "queryLines": [
+    "SELECT check_id,type,key,field,source_value,candidate_value FROM `workspace`.`default`.`cutoverguard_fafd9a2bdcc74b3b_issues`\n"
+   ]
+  },
+  {
+   "name": "retail_impacts",
+   "displayName": "Retail Impacts",
+   "queryLines": [
+    "SELECT account_id,currency,CAST(source_minor/100 AS DECIMAL(38,2)) source_major,CAST(candidate_minor/100 AS DECIMAL(38,2)) candidate_major,CAST(delta_minor/100 AS DECIMAL(38,2)) delta_major FROM `workspace`.`default`.`cutoverguard_fafd9a2bdcc74b3b_impacts` WHERE currency='GBP'\n"
+   ]
+  },
+  {
+   "name": "retail_chart",
+   "displayName": "Retail Chart",
+   "queryLines": [
+    "SELECT account_id label,CAST(delta_minor/100 AS DECIMAL(38,2)) delta_major FROM `workspace`.`default`.`cutoverguard_fafd9a2bdcc74b3b_impacts` WHERE currency='GBP' AND delta_minor<>0 UNION ALL SELECT 'Extract net' label,CAST(net_delta_minor/100 AS DECIMAL(38,2)) delta_major FROM `workspace`.`default`.`cutoverguard_fafd9a2bdcc74b3b_totals` WHERE currency='GBP'\n"
+   ]
+  },
+  {
+   "name": "scale_kpis",
+   "displayName": "Scale Kpis",
+   "queryLines": [
+    "SELECT source_rows orders,candidate_total-source_total total_difference_scaled,crosswalk_findings,order_findings wrong_owners,quarantined_rows FROM `workspace`.`cutoverguard_migration_bad`.gold_cutover_decision\n"
+   ]
+  },
+  {
+   "name": "scale_checks",
+   "displayName": "Scale Checks",
+   "queryLines": [
+    "WITH d AS (SELECT * FROM `workspace`.`cutoverguard_migration_bad`.gold_cutover_decision), raw AS (\n",
+    "SELECT 1 ordinal,'Row count' check_name,format_number(source_rows,0) source_value,format_number(candidate_rows,0) candidate_value,source_rows=candidate_rows AND source_rows=legacy_rows passed FROM d\n",
+    "UNION ALL SELECT 2,'Total price units',format_number(CAST(source_total/100 AS DECIMAL(38,2)),2),format_number(CAST(candidate_total/100 AS DECIMAL(38,2)),2),source_total<=>candidate_total FROM d\n",
+    "UNION ALL SELECT 3,'Quarantine','0 rows',concat(CAST(quarantined_rows AS STRING),' rows'),quarantined_rows=0 FROM d\n",
+    "UNION ALL SELECT 4,'Crosswalk mapping','Expected customer',concat(CAST(crosswalk_findings AS STRING),' wrong mappings'),crosswalk_findings=0 FROM d\n",
+    "UNION ALL SELECT 5,'Order ownership','Original owner',concat(CAST(order_findings AS STRING),' wrong-owner orders'),order_findings=0 FROM d\n",
+    ") SELECT ordinal,check_name,source_value,candidate_value,CASE WHEN passed THEN '🟢 PASS' ELSE '🔴 BLOCKED' END result_label FROM raw ORDER BY ordinal\n"
+   ]
+  },
+  {
+   "name": "scale_effects",
+   "displayName": "Scale Effects",
+   "queryLines": [
+    "SELECT account_id customer,CAST(delta_scaled_units/100 AS DECIMAL(38,2)) signed_price_units,CASE WHEN delta_scaled_units>0 THEN 'Over' ELSE 'Under' END direction FROM `workspace`.`cutoverguard_migration_bad`.gold_customer_effects WHERE delta_scaled_units<>0 ORDER BY delta_scaled_units DESC,account_id\n"
+   ]
+  },
+  {
+   "name": "scale_drilldown",
+   "displayName": "Scale Drilldown",
+   "queryLines": [
+    "SELECT order_id order_key,original_owner,migrated_owner,CAST(original_amount/100 AS DECIMAL(38,2)) price_units,original_utc FROM `workspace`.`cutoverguard_migration_bad`.gold_order_issues ORDER BY original_amount DESC,order_id\n"
+   ]
+  },
+  {
+   "name": "pipeline_replay",
+   "displayName": "Pipeline Replay",
+   "queryLines": [
+    "SELECT 'Defective migration' scenario,source_rows,candidate_rows,order_findings,crosswalk_findings,CAST((candidate_total-source_total)/100 AS DECIMAL(38,2)) net_price_difference,CASE status WHEN 'blocked' THEN '🔴 BLOCKED' ELSE status END status,'🔴 Gate FAILED · nothing promoted' promotion FROM `workspace`.`cutoverguard_migration_bad`.gold_cutover_decision UNION ALL SELECT 'Corrected migration',source_rows,candidate_rows,order_findings,crosswalk_findings,CAST((candidate_total-source_total)/100 AS DECIMAL(38,2)),CASE status WHEN 'ready' THEN '🟢 READY for human review' ELSE status END,'🟢 Gate PASSED · '||format_number((SELECT count(*) FROM `workspace`.`cutoverguard_promotion_fixed`.promoted_orders),0)||' rows promoted' FROM `workspace`.`cutoverguard_migration_fixed`.gold_cutover_decision\n"
+   ]
+  }
+ ],
+ "pages": [
+  {
+   "name": "scale_main",
+   "displayName": "Migration pipeline · 7.5M orders",
+   "layout": [
+    {
+     "widget": {
+      "name": "scale_story",
+      "multilineTextboxSpec": {
+       "lines": [
+        "# Same total. Wrong customers.\n",
+        "A swapped customer crosswalk reallocates whole order histories across **7.5M orders**. Persisted Lakeflow gold results show exactly which orders and customers changed — and the pipeline promotion gate that blocks them."
+       ]
+      }
+     },
+     "position": {
+      "x": 0,
+      "y": 0,
+      "width": 12,
+      "height": 2
+     }
+    },
+    {
+     "widget": {
+      "name": "scale_orders",
+      "queries": [
+       {
+        "name": "main_query",
+        "query": {
+         "datasetName": "scale_kpis",
+         "fields": [
+          {
+           "name": "orders",
+           "expression": "`orders`"
+          }
+         ],
+         "disaggregated": true
+        }
+       }
+      ],
+      "spec": {
+       "frame": {
+        "showTitle": true,
+        "title": {
+         "value": "Orders compared",
+         "fields": []
+        }
+       },
+       "version": 2,
+       "widgetType": "counter",
+       "encodings": {
+        "value": {
+         "fieldName": "orders",
+         "format": {
+          "type": "number-plain",
+          "abbreviation": "none",
+          "decimalPlaces": {
+           "type": "max",
+           "places": 0
+          }
+         },
+         "displayName": "Orders compared"
+        }
+       },
+       "data": {
+        "queryName": "main_query"
+       }
+      }
+     },
+     "position": {
+      "x": 0,
+      "y": 2,
+      "width": 3,
+      "height": 3
+     }
+    },
+    {
+     "widget": {
+      "name": "scale_total_difference_scaled",
+      "queries": [
+       {
+        "name": "main_query",
+        "query": {
+         "datasetName": "scale_kpis",
+         "fields": [
+          {
+           "name": "total_difference_scaled",
+           "expression": "`total_difference_scaled`"
+          }
+         ],
+         "disaggregated": true
+        }
+       }
+      ],
+      "spec": {
+       "version": 2,
+       "widgetType": "counter",
+       "encodings": {
+        "value": {
+         "fieldName": "total_difference_scaled",
+         "displayName": "Firm total difference"
+        }
+       },
+       "frame": {
+        "showTitle": true,
+        "title": "Firm total difference"
+       }
+      }
+     },
+     "position": {
+      "x": 9,
+      "y": 2,
+      "width": 3,
+      "height": 3
+     }
+    },
+    {
+     "widget": {
+      "name": "scale_wrong_owners",
+      "queries": [
+       {
+        "name": "main_query",
+        "query": {
+         "datasetName": "scale_kpis",
+         "fields": [
+          {
+           "name": "wrong_owners",
+           "expression": "`wrong_owners`"
+          }
+         ],
+         "disaggregated": true
+        }
+       }
+      ],
+      "spec": {
+       "frame": {
+        "showTitle": true,
+        "title": {
+         "value": "Wrong owners — BLOCKED",
+         "fields": []
+        }
+       },
+       "version": 2,
+       "widgetType": "counter",
+       "encodings": {
+        "value": {
+         "fieldName": "wrong_owners",
+         "displayName": "Wrong owners — BLOCKED"
+        }
+       },
+       "data": {
+        "queryName": "main_query"
+       }
+      }
+     },
+     "position": {
+      "x": 3,
+      "y": 2,
+      "width": 3,
+      "height": 3
+     }
+    },
+    {
+     "widget": {
+      "name": "scale_checklist",
+      "queries": [
+       {
+        "name": "main_query",
+        "query": {
+         "datasetName": "scale_checks",
+         "fields": [
+          {
+           "name": "check_name",
+           "expression": "`check_name`"
+          },
+          {
+           "name": "source_value",
+           "expression": "`source_value`"
+          },
+          {
+           "name": "candidate_value",
+           "expression": "`candidate_value`"
+          },
+          {
+           "name": "result_label",
+           "expression": "`result_label`"
+          }
+         ],
+         "disaggregated": true
+        }
+       }
+      ],
+      "spec": {
+       "version": 2,
+       "widgetType": "table",
+       "encodings": {
+        "columns": [
+         {
+          "fieldName": "check_name",
+          "displayName": "Check Name"
+         },
+         {
+          "fieldName": "source_value",
+          "displayName": "Source Value"
+         },
+         {
+          "fieldName": "candidate_value",
+          "displayName": "Candidate Value"
+         },
+         {
+          "fieldName": "result_label",
+          "displayName": "Result Label"
+         }
+        ]
+       },
+       "frame": {
+        "showTitle": true,
+        "title": "Aggregate parity versus crosswalk and ownership"
+       }
+      }
+     },
+     "position": {
+      "x": 0,
+      "y": 5,
+      "width": 12,
+      "height": 5
+     }
+    },
+    {
+     "widget": {
+      "name": "scale_diverging",
+      "queries": [
+       {
+        "name": "main_query",
+        "query": {
+         "datasetName": "scale_effects",
+         "fields": [
+          {
+           "name": "customer",
+           "expression": "`customer`"
+          },
+          {
+           "name": "signed_price_units",
+           "expression": "`signed_price_units`"
+          },
+          {
+           "name": "direction",
+           "expression": "`direction`"
+          }
+         ],
+         "disaggregated": true
+        }
+       }
+      ],
+      "spec": {
+       "version": 3,
+       "widgetType": "bar",
+       "encodings": {
+        "x": {
+         "fieldName": "customer",
+         "scale": {
+          "type": "categorical",
+          "sort": {
+           "by": "y-reversed"
+          }
+         },
+         "displayName": "Customer"
+        },
+        "y": {
+         "fieldName": "signed_price_units",
+         "scale": {
+          "type": "quantitative"
+         },
+         "displayName": "Candidate − source (price units)"
+        },
+        "color": {
+         "fieldName": "direction",
+         "scale": {
+          "type": "categorical",
+          "mappings": [
+           {
+            "value": "Over",
+            "color": "#16803D"
+           },
+           {
+            "value": "Under",
+            "color": "#DC2626"
+           }
+          ]
+         },
+         "displayName": "Allocation"
+        }
+       },
+       "frame": {
+        "showTitle": true,
+        "title": "Who received whose orders · green = over-allocated · red = under-allocated · nets to exactly 0"
+       }
+      }
+     },
+     "position": {
+      "x": 0,
+      "y": 14,
+      "width": 12,
+      "height": 8
+     }
+    },
+    {
+     "widget": {
+      "name": "scale_order_drilldown",
+      "queries": [
+       {
+        "name": "main_query",
+        "query": {
+         "datasetName": "scale_drilldown",
+         "fields": [
+          {
+           "name": "order_key",
+           "expression": "`order_key`"
+          },
+          {
+           "name": "original_owner",
+           "expression": "`original_owner`"
+          },
+          {
+           "name": "migrated_owner",
+           "expression": "`migrated_owner`"
+          },
+          {
+           "name": "price_units",
+           "expression": "`price_units`"
+          },
+          {
+           "name": "original_utc",
+           "expression": "`original_utc`"
+          }
+         ],
+         "disaggregated": true
+        }
+       }
+      ],
+      "spec": {
+       "version": 2,
+       "widgetType": "table",
+       "encodings": {
+        "columns": [
+         {
+          "fieldName": "order_key",
+          "displayName": "Order Key"
+         },
+         {
+          "fieldName": "original_owner",
+          "displayName": "Original Owner"
+         },
+         {
+          "fieldName": "migrated_owner",
+          "displayName": "Migrated Owner"
+         },
+         {
+          "fieldName": "price_units",
+          "displayName": "Price Units"
+         }
+        ]
+       },
+       "frame": {
+        "showTitle": true,
+        "title": "Wrong-owner orders • largest price first"
+       }
+      }
+     },
+     "position": {
+      "x": 0,
+      "y": 22,
+      "width": 12,
+      "height": 7
+     }
+    },
+    {
+     "widget": {
+      "name": "pipeline_crosswalk_counter",
+      "queries": [
+       {
+        "name": "main_query",
+        "query": {
+         "datasetName": "scale_kpis",
+         "fields": [
+          {
+           "name": "crosswalk_findings",
+           "expression": "`crosswalk_findings`"
+          }
+         ],
+         "disaggregated": true
+        }
+       }
+      ],
+      "spec": {
+       "version": 2,
+       "widgetType": "counter",
+       "encodings": {
+        "value": {
+         "fieldName": "crosswalk_findings",
+         "displayName": "Wrong customer mappings"
+        }
+       },
+       "frame": {
+        "showTitle": true,
+        "title": "Wrong customer mappings"
+       }
+      }
+     },
+     "position": {
+      "x": 6,
+      "y": 2,
+      "width": 3,
+      "height": 3
+     }
+    },
+    {
+     "widget": {
+      "name": "pipeline_corrected_replay",
+      "queries": [
+       {
+        "name": "main_query",
+        "query": {
+         "datasetName": "pipeline_replay",
+         "fields": [
+          {
+           "name": "scenario",
+           "expression": "`scenario`"
+          },
+          {
+           "name": "source_rows",
+           "expression": "`source_rows`"
+          },
+          {
+           "name": "candidate_rows",
+           "expression": "`candidate_rows`"
+          },
+          {
+           "name": "order_findings",
+           "expression": "`order_findings`"
+          },
+          {
+           "name": "crosswalk_findings",
+           "expression": "`crosswalk_findings`"
+          },
+          {
+           "name": "net_price_difference",
+           "expression": "`net_price_difference`"
+          },
+          {
+           "name": "status",
+           "expression": "`status`"
+          },
+          {
+           "name": "promotion",
+           "expression": "`promotion`"
+          }
+         ],
+         "disaggregated": true
+        }
+       }
+      ],
+      "spec": {
+       "version": 2,
+       "widgetType": "table",
+       "encodings": {
+        "columns": [
+         {
+          "fieldName": "scenario",
+          "displayName": "Scenario"
+         },
+         {
+          "fieldName": "source_rows",
+          "displayName": "Source Rows"
+         },
+         {
+          "fieldName": "candidate_rows",
+          "displayName": "Candidate Rows"
+         },
+         {
+          "fieldName": "order_findings",
+          "displayName": "Wrong-owner orders"
+         },
+         {
+          "fieldName": "crosswalk_findings",
+          "displayName": "Wrong mappings"
+         },
+         {
+          "fieldName": "net_price_difference",
+          "displayName": "Firm total difference"
+         },
+         {
+          "fieldName": "status",
+          "displayName": "Decision"
+         },
+         {
+          "fieldName": "promotion",
+          "displayName": "Promotion gate"
+         }
+        ]
+       },
+       "frame": {
+        "showTitle": true,
+        "title": "The gate: defective is blocked, corrected is promoted"
+       }
+      }
+     },
+     "position": {
+      "x": 0,
+      "y": 10,
+      "width": 12,
+      "height": 4
+     }
+    }
+   ],
+   "pageType": "PAGE_TYPE_CANVAS",
+   "layoutVersion": "GRID_V1"
+  },
+  {
+   "name": "public_retail",
+   "displayName": "Public retail · UCI",
+   "layout": [
+    {
+     "widget": {
+      "name": "retail_story",
+      "multilineTextboxSpec": {
+       "lines": [
+        "# Real public records: UCI Online Retail\n",
+        "**1,467 historical invoice lines** per side. Deliberately controlled owner defects; corrected replay restores parity."
+       ]
+      }
+     },
+     "position": {
+      "x": 0,
+      "y": 0,
+      "width": 12,
+      "height": 2
+     }
+    },
+    {
+     "widget": {
+      "name": "retail_primary_findings",
+      "queries": [
+       {
+        "name": "main_query",
+        "query": {
+         "datasetName": "retail_kpis",
+         "fields": [
+          {
+           "name": "primary_findings",
+           "expression": "`primary_findings`"
+          }
+         ],
+         "disaggregated": true
+        }
+       }
+      ],
+      "spec": {
+       "version": 2,
+       "widgetType": "counter",
+       "encodings": {
+        "value": {
+         "fieldName": "primary_findings",
+         "displayName": "Ownership findings"
+        }
+       },
+       "frame": {
+        "showTitle": true,
+        "title": "Ownership findings"
+       }
+      }
+     },
+     "position": {
+      "x": 0,
+      "y": 2,
+      "width": 3,
+      "height": 3
+     }
+    },
+    {
+     "widget": {
+      "name": "retail_net_delta_major",
+      "queries": [
+       {
+        "name": "main_query",
+        "query": {
+         "datasetName": "retail_kpis",
+         "fields": [
+          {
+           "name": "net_delta_major",
+           "expression": "`net_delta_major`"
+          }
+         ],
+         "disaggregated": true
+        }
+       }
+      ],
+      "spec": {
+       "version": 2,
+       "widgetType": "counter",
+       "encodings": {
+        "value": {
+         "fieldName": "net_delta_major",
+         "displayName": "Extract net change (GBP)"
+        }
+       },
+       "frame": {
+        "showTitle": true,
+        "title": "Extract net change (GBP)"
+       }
+      }
+     },
+     "position": {
+      "x": 3,
+      "y": 2,
+      "width": 3,
+      "height": 3
+     }
+    },
+    {
+     "widget": {
+      "name": "retail_absolute_delta_major",
+      "queries": [
+       {
+        "name": "main_query",
+        "query": {
+         "datasetName": "retail_kpis",
+         "fields": [
+          {
+           "name": "absolute_delta_major",
+           "expression": "`absolute_delta_major`"
+          }
+         ],
+         "disaggregated": true
+        }
+       }
+      ],
+      "spec": {
+       "version": 2,
+       "widgetType": "counter",
+       "encodings": {
+        "value": {
+         "fieldName": "absolute_delta_major",
+         "displayName": "Absolute account difference (GBP)"
+        }
+       },
+       "frame": {
+        "showTitle": true,
+        "title": "Absolute account difference (GBP)"
+       }
+      }
+     },
+     "position": {
+      "x": 6,
+      "y": 2,
+      "width": 3,
+      "height": 3
+     }
+    },
+    {
+     "widget": {
+      "name": "retail_affected_major",
+      "queries": [
+       {
+        "name": "main_query",
+        "query": {
+         "datasetName": "retail_kpis",
+         "fields": [
+          {
+           "name": "affected_major",
+           "expression": "`affected_major`"
+          }
+         ],
+         "disaggregated": true
+        }
+       }
+      ],
+      "spec": {
+       "version": 2,
+       "widgetType": "counter",
+       "encodings": {
+        "value": {
+         "fieldName": "affected_major",
+         "displayName": "Changed transaction notional (GBP)"
+        }
+       },
+       "frame": {
+        "showTitle": true,
+        "title": "Changed transaction notional (GBP)"
+       }
+      }
+     },
+     "position": {
+      "x": 9,
+      "y": 2,
+      "width": 3,
+      "height": 3
+     }
+    },
+    {
+     "widget": {
+      "name": "retail_signed_chart",
+      "queries": [
+       {
+        "name": "main_query",
+        "query": {
+         "datasetName": "retail_chart",
+         "fields": [
+          {
+           "name": "label",
+           "expression": "`label`"
+          },
+          {
+           "name": "delta_major",
+           "expression": "`delta_major`"
+          }
+         ],
+         "disaggregated": true
+        }
+       }
+      ],
+      "spec": {
+       "version": 3,
+       "widgetType": "bar",
+       "encodings": {
+        "x": {
+         "fieldName": "label",
+         "scale": {
+          "type": "categorical"
+         }
+        },
+        "y": {
+         "fieldName": "delta_major",
+         "scale": {
+          "type": "quantitative"
+         },
+         "displayName": "Candidate minus source (GBP)"
+        }
+       },
+       "frame": {
+        "showTitle": true,
+        "title": "Changed bucket allocation vs extract net — GBP"
+       }
+      }
+     },
+     "position": {
+      "x": 0,
+      "y": 5,
+      "width": 7,
+      "height": 6
+     }
+    },
+    {
+     "widget": {
+      "name": "retail_totals",
+      "queries": [
+       {
+        "name": "main_query",
+        "query": {
+         "datasetName": "retail_kpis",
+         "fields": [
+          {
+           "name": "currency",
+           "expression": "`currency`"
+          },
+          {
+           "name": "source_major",
+           "expression": "`source_major`"
+          },
+          {
+           "name": "candidate_major",
+           "expression": "`candidate_major`"
+          },
+          {
+           "name": "net_delta_major",
+           "expression": "`net_delta_major`"
+          }
+         ],
+         "disaggregated": true
+        }
+       }
+      ],
+      "spec": {
+       "version": 2,
+       "widgetType": "table",
+       "encodings": {
+        "columns": [
+         {
+          "fieldName": "currency",
+          "displayName": "Currency"
+         },
+         {
+          "fieldName": "source_major",
+          "displayName": "Source Major"
+         },
+         {
+          "fieldName": "candidate_major",
+          "displayName": "Candidate Major"
+         },
+         {
+          "fieldName": "net_delta_major",
+          "displayName": "Net Delta Major"
+         }
+        ]
+       },
+       "frame": {
+        "showTitle": true,
+        "title": "Equal extract totals — GBP"
+       }
+      }
+     },
+     "position": {
+      "x": 7,
+      "y": 5,
+      "width": 5,
+      "height": 6
+     }
+    },
+    {
+     "widget": {
+      "name": "retail_ownership",
+      "queries": [
+       {
+        "name": "main_query",
+        "query": {
+         "datasetName": "retail_findings",
+         "fields": [
+          {
+           "name": "key",
+           "expression": "`key`"
+          },
+          {
+           "name": "type",
+           "expression": "`type`"
+          },
+          {
+           "name": "field",
+           "expression": "`field`"
+          },
+          {
+           "name": "source_value",
+           "expression": "`source_value`"
+          },
+          {
+           "name": "candidate_value",
+           "expression": "`candidate_value`"
+          }
+         ],
+         "disaggregated": true
+        }
+       }
+      ],
+      "spec": {
+       "version": 2,
+       "widgetType": "table",
+       "encodings": {
+        "columns": [
+         {
+          "fieldName": "key",
+          "displayName": "Key"
+         },
+         {
+          "fieldName": "type",
+          "displayName": "Type"
+         },
+         {
+          "fieldName": "field",
+          "displayName": "Field"
+         },
+         {
+          "fieldName": "source_value",
+          "displayName": "Source Value"
+         },
+         {
+          "fieldName": "candidate_value",
+          "displayName": "Candidate Value"
+         }
+        ]
+       },
+       "frame": {
+        "showTitle": true,
+        "title": "Controlled ownership evidence"
+       }
+      }
+     },
+     "position": {
+      "x": 0,
+      "y": 11,
+      "width": 12,
+      "height": 5
+     }
+    },
+    {
+     "widget": {
+      "name": "retail_changed_accounts",
+      "queries": [
+       {
+        "name": "main_query",
+        "query": {
+         "datasetName": "retail_impacts",
+         "fields": [
+          {
+           "name": "account_id",
+           "expression": "`account_id`"
+          },
+          {
+           "name": "currency",
+           "expression": "`currency`"
+          },
+          {
+           "name": "source_major",
+           "expression": "`source_major`"
+          },
+          {
+           "name": "candidate_major",
+           "expression": "`candidate_major`"
+          },
+          {
+           "name": "delta_major",
+           "expression": "`delta_major`"
+          }
+         ],
+         "disaggregated": true
+        }
+       }
+      ],
+      "spec": {
+       "version": 2,
+       "widgetType": "table",
+       "encodings": {
+        "columns": [
+         {
+          "fieldName": "account_id",
+          "displayName": "Account Id"
+         },
+         {
+          "fieldName": "currency",
+          "displayName": "Currency"
+         },
+         {
+          "fieldName": "source_major",
+          "displayName": "Source Major"
+         },
+         {
+          "fieldName": "candidate_major",
+          "displayName": "Candidate Major"
+         },
+         {
+          "fieldName": "delta_major",
+          "displayName": "Delta Major"
+         }
+        ]
+       },
+       "frame": {
+        "showTitle": true,
+        "title": "Receivables bucket comparison — GBP"
+       }
+      }
+     },
+     "position": {
+      "x": 0,
+      "y": 16,
+      "width": 12,
+      "height": 6
+     }
+    },
+    {
+     "widget": {
+      "name": "retail_replay",
+      "queries": [
+       {
+        "name": "main_query",
+        "query": {
+         "datasetName": "retail_replay",
+         "fields": [
+          {
+           "name": "scenario",
+           "expression": "`scenario`"
+          },
+          {
+           "name": "findings",
+           "expression": "`findings`"
+          },
+          {
+           "name": "absolute_difference_major",
+           "expression": "`absolute_difference_major`"
+          }
+         ],
+         "disaggregated": true
+        }
+       }
+      ],
+      "spec": {
+       "version": 2,
+       "widgetType": "table",
+       "encodings": {
+        "columns": [
+         {
+          "fieldName": "scenario",
+          "displayName": "Scenario"
+         },
+         {
+          "fieldName": "findings",
+          "displayName": "Findings"
+         },
+         {
+          "fieldName": "absolute_difference_major",
+          "displayName": "Absolute Difference Major"
+         }
+        ]
+       },
+       "frame": {
+        "showTitle": true,
+        "title": "Corrected replay — GBP"
+       }
+      }
+     },
+     "position": {
+      "x": 0,
+      "y": 22,
+      "width": 12,
+      "height": 4
+     }
+    }
+   ],
+   "pageType": "PAGE_TYPE_CANVAS",
+   "layoutVersion": "GRID_V1"
+  },
+  {
+   "name": "evidence",
+   "displayName": "Evidence & limitations",
+   "layout": [
+    {
+     "widget": {
+      "name": "evidence_text",
+      "multilineTextboxSpec": {
+       "lines": [
+        "# Evidence & Limitations\n",
+        "\n",
+        "## Data sources\n",
+        "Live dashboard reads persisted gold tables in `workspace.cutoverguard_migration_bad` and `workspace.cutoverguard_migration_fixed`.\n",
+        "Independent count from the frozen source and the 50 authored swapped customer IDs: **811 affected orders**.\n",
+        "\n",
+        "## Scope\n",
+        "Synthetic TPC-H benchmark; arbitrary price units, no currency. This crosswalk experiment differs from the earlier 50-order swap experiment.\n",
+        "Source dates are interpreted as explicit UTC-midnight instants. Deliberate mapping defects, not observed bank migration failures.\n",
+        "\n",
+        "## Governance\n",
+        "Promotion tests and update IDs are recorded separately. A ready review verdict is **not** production authorization.\n",
+        "\n",
+        "## Public retail\n",
+        "Public retail tab uses historical UCI invoices with controlled candidate defects; DOI 10.24432/C5BW33, CC BY 4.0.\n",
+        "\n",
+        "## Methodology\n",
+        "Keyed row-diff tools can detect ownership changes too; CutoverGuard adds signed effects, review decisions and a pipeline promotion gate."
+       ]
+      }
+     },
+     "position": {
+      "x": 0,
+      "y": 0,
+      "width": 12,
+      "height": 10
+     }
+    }
+   ],
+   "pageType": "PAGE_TYPE_CANVAS",
+   "layoutVersion": "GRID_V1"
+  }
+ ],
+ "uiSettings": {
+  "theme": {
+   "visualizationColors": [
+    "#15AFDD",
+    "#2375A8",
+    "#52A870",
+    "#C85070",
+    "#C89930"
+   ],
+   "widgetHeaderAlignment": "ALIGNMENT_UNSPECIFIED",
+   "fontFamily": "Inter",
+   "textBoxVerticalAlign": "VERTICAL_ALIGN_CENTER",
+   "widgetPadding": 12,
+   "widgetMargin": 4,
+   "widgetCornerRadius": 8,
+   "widgetShadow": 10,
+   "visualizationColorMappings": [
+    {
+     "value": "Increase",
+     "color": "#16803D"
+    },
+    {
+     "value": "Decrease",
+     "color": "#DC2626"
+    }
+   ]
+  },
+  "applyModeEnabled": false
+ }
+}
