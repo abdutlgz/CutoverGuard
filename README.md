@@ -17,18 +17,24 @@ TPC-H uses arbitrary price units, not currency; these are deliberate demonstrati
 [Saved pipeline evidence](evidence/pipeline-promotion-summary.json) ·
 [Dashboard and migration gate](docs/tpch-dashboard-and-gate.md).
 
-![Databricks dashboard: row count and totals pass while crosswalk and order ownership are blocked](docs/images/dashboard-overview.png)
+![Databricks dashboard: totals pass, ownership blocked, gate decision and signed customer effects](docs/images/dashboard-overview.png)
 
-The defective promotion gate fails on `no_wrong_owner_promotion`; the output record
-shows 811 order findings with identical source and candidate totals:
+The Lakeflow evidence pipeline builds bronze (legacy extract, crosswalks), silver
+(typed, keyed, quarantine) and gold (findings, customer effects, cutover decision)
+for both the defective and the corrected migration:
+
+![Defective evidence pipeline: 15 tables, completed](docs/images/pipeline-evidence-defective.png)
+
+![Corrected evidence pipeline: 15 tables, completed](docs/images/pipeline-evidence-corrected.png)
+
+The defective promotion gate fails on `no_wrong_owner_promotion` and `promoted_orders`
+is skipped, so nothing is promoted:
 
 ![Lakeflow promotion gate failing on the defective migration](docs/images/gate-defective-blocked.png)
 
 The corrected migration meets the expectation and promotes 7,500,000 rows:
 
 ![Lakeflow promotion gate passing on the corrected migration](docs/images/gate-corrected-promoted.png)
-
-![Persisted gold decisions: defective blocked, corrected ready](docs/images/defective-vs-corrected.png)
 
 Screenshots were cropped to remove browser chrome and account details.
 
@@ -149,6 +155,8 @@ Candidate defects were deliberately injected, not observed in a real migration.
 [Source, license and exclusions](docs/cutoverguard-real-data.md) are documented.
 Optional XLSX ingestion needs `openpyxl`.
 
+![Dashboard page for the historical UCI retail records](docs/images/dashboard-public-retail.png)
+
 The app also includes an exact-integer replay of the two synthetic events through
 defective/fixed mappings. It is a local controlled parallel-run illustration,
 not a production digital twin. Replay fingerprints are separate from main exports.
@@ -191,4 +199,4 @@ The included cloud reports and native payloads capture the original synthetic de
 
 The new migration-review Genie space reads the pipeline gold tables. Five SQL-grounded benchmarks scored 4/5 initially; one missing price-unit conversion was fixed with a curated SQL example, then the unchanged suite scored 5/5. This is a tuned five-question regression test, not a general reliability claim. See [benchmark method and evidence](docs/genie-benchmarks.md).
 
-![Pipeline dashboard with full numbers](assets/demo/dashboard-pipeline.png)
+![Genie answers over the pipeline gold tables](docs/images/genie-answers.png)
