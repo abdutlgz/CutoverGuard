@@ -88,6 +88,14 @@ four aggregate checks PASS while two wrong-owner rows are BLOCKED.
 Existing row-diff and owner-aware hash tools can catch swaps too; CutoverGuard adds
 financial allocation effects and evidence for human review.
 
+The final dashboard generator puts the TPC-H run first, followed by real public
+records and a single evidence page. It adds a fifth aggregate control (order-key
+checksum); the 700-trial study retains its documented four-control baseline.
+The crosswalk migration generator prepares a Lakeflow promotion gate, with
+separate defective/corrected SQL. Empty serverless pipeline creation is confirmed;
+live gate failure and corrected promotion remain unverified.
+See [dashboard and gate deployment](docs/tpch-dashboard-and-gate.md).
+
 The dollar-valued native counter update has passed live SQL/configuration verification;
 refreshed rendering remains pending. Applying it in another workspace requires its
 existing saved state. It uses a backup, exact SQL checks and ETag to
@@ -141,7 +149,8 @@ still decides whether to proceed.
 
 [Contract](docs/cutoverguard-contract.md), [platform workflow](docs/cutoverguard-databricks.md)
 and [demo draft](docs/cutoverguard-demo.md) explain the implementation and evidence.
-Public repository publication, demo video and Devpost submission remain pending.
+The initial GitHub publication is committed; demo video and Devpost submission
+remain pending.
 
 ## Reproducing this publication snapshot
 

@@ -12,20 +12,22 @@ import sys
 ROOT = Path(__file__).resolve().parents[1]
 TREES = {'cutoverguard': {'.py'}, 'cutover_static': {'.html', '.css', '.js'},
          'cutover_examples': {'.json'}, 'amd': {'.py', '.md'},
-         'databricks_demo/ready': {'.sql', '.json'}, 'native_databricks/ready': {'.json'}}
+         'databricks_demo/ready': {'.sql', '.json'}, 'native_databricks/ready': {'.json','.md'},
+         'databricks_demo/migration-final': {'.sql'}}
 SCRIPTS = ('build_cutover_examples.py', 'build_cutover_preview.py', 'build_databricks_demo.py', 'build_retail_dashboard.py', 'build_retail_genie.py',
            'check_databricks.py', 'run_cutoverguard_databricks.py', 'run_cutoverguard_files.py',
            'setup_cutoverguard_native.py', 'setup_cutoverguard_volume.py', 'update_cutoverguard_dashboard.py',
            'inspect_cutoverguard_upload.py',
            'validate_public_retail.py', 'radeon_ssh.sh', 'prepare_submission.py',
-           'run_defect_experiment.py','run_tpch_scale.py','verify_aggregate_baseline.py')
+           'run_defect_experiment.py','run_tpch_scale.py','verify_aggregate_baseline.py',
+           'build_tpch_dashboard.py','build_migration_gate.py')
 TESTS = ('test_cutover_engine.py', 'test_cutover_databricks.py', 'test_cutover_http.py',
          'test_cutover_replay.py', 'test_databricks_demo.py', 'test_native_databricks.py',
          'test_public_retail.py', 'test_amd_ledger.py', 'test_dashboard_dollars.py',
          'test_file_ingestion.py', 'test_volume_setup.py', 'test_upload_inspection.py',
          'test_historical_cloud_import.py', 'test_retail_dashboard.py', 'test_prepare_submission.py',
          'test_retail_genie.py','test_aggregate_baseline.py','test_defect_experiment.py',
-         'test_tpch_scale.py','test_baseline_verification.py')
+         'test_tpch_scale.py','test_baseline_verification.py','test_tpch_dashboard.py','test_migration_gate.py')
 DOCS = ('contract', 'databricks', 'native', 'real-data', 'file-ingestion', 'demo')
 EVIDENCE = ('cutover_results/defective-cloud-v2.json', 'cutover_results/fixed-cloud.json',
             'databricks_files/retail-run-002/verification-summary.json',
@@ -64,12 +66,15 @@ def sources(root):
     selected += [(n, n) for n in EVIDENCE if (root / n).is_file()]
     selected += [('prep/cutoverguard-' + n + '.md', 'docs/cutoverguard-' + n + '.md')
                  for n in DOCS if (root / ('prep/cutoverguard-' + n + '.md')).is_file()]
-    selected += [('docs/'+n,'docs/'+n) for n in ('ownership-evidence.md','tpch-scale.md') if (root/'docs'/n).is_file()]
+    selected += [('docs/'+n,'docs/'+n) for n in ('ownership-evidence.md','tpch-scale.md','tpch-dashboard-and-gate.md') if (root/'docs'/n).is_file()]
     return sorted(set(selected))
 
 
 def transform(source, data):
     changes = []
+    if source.startswith('databricks_demo/migration-final/'):
+        data = re.sub(rb'tpch_swap_[a-f0-9]{16}_source',b'YOUR_FROZEN_TPCH_SOURCE',data)
+        changes.append('Replace private snapshot table with a portable placeholder')
     if source.endswith('.md'):
         text = data.decode('utf-8')
         if source == 'prep/cutoverguard-contract.md':
