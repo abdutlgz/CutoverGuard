@@ -172,6 +172,9 @@ WITH diagnostics AS (SELECT
 (SELECT count(*) FROM gold_crosswalk_issues) crosswalk_findings,
 (SELECT count(*) FROM source_quarantine)+(SELECT count(*) FROM candidate_quarantine) quarantined_rows,
 (SELECT count(*) FROM bronze_legacy_orders) legacy_rows,
+(SELECT sum(amount_scaled_units) FROM bronze_legacy_orders) legacy_total,
+(SELECT CAST(pmod(sum(CAST(conv(substring(sha2(legacy_customer_id,256),1,16),16,10) AS DECIMAL(38,0))),CAST(18446744073709551616 AS DECIMAL(38,0))) AS STRING) FROM bronze_legacy_orders) legacy_owner_checksum,
+(SELECT CAST(pmod(sum(CAST(conv(substring(sha2(order_id,256),1,16),16,10) AS DECIMAL(38,0))),CAST(18446744073709551616 AS DECIMAL(38,0))) AS STRING) FROM bronze_legacy_orders) legacy_key_checksum,
 (SELECT count(*) FROM silver_source) source_rows,
 (SELECT count(*) FROM silver_candidate) candidate_rows,
 (SELECT sum(amount_scaled_units) FROM silver_source) source_total,
@@ -179,6 +182,8 @@ WITH diagnostics AS (SELECT
 (SELECT count(*) FROM (SELECT legacy_customer_id FROM bronze_migration_crosswalk GROUP BY legacy_customer_id HAVING count(*)<>1)) duplicate_crosswalk_keys
 ) SELECT *,CASE WHEN order_findings=0 AND crosswalk_findings=0 AND quarantined_rows=0
 AND duplicate_crosswalk_keys=0 AND legacy_rows>0 AND source_rows=legacy_rows AND candidate_rows=legacy_rows
+AND legacy_rows=7500000 AND legacy_total=113343921524625
+AND legacy_owner_checksum='7186124301794411862' AND legacy_key_checksum='15214096825819894155'
 AND source_total<=>candidate_total THEN 'ready' ELSE 'blocked' END status FROM diagnostics;
 
 CREATE OR REFRESH MATERIALIZED VIEW cutover_gate (

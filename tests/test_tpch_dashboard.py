@@ -45,7 +45,9 @@ class Runner:
         self.n+=1;self.statement_ids.append(str(self.n))
         r=self.r
         if self.n==1:return [['7500000','0','0','50','59.8']]
-        if self.n==2:return [[str(i),'check','source','candidate','🟢 PASS' if i<6 else '🔴 BLOCKED'] for i in range(1,7)]
+        if self.n==2:
+            values=[['Row count','7500000','7500000'],['Total price units','1234567.89','1234567.89'],['Owner-ID checksum','987','987'],['Order-key checksum','654','654'],['Daily price totals','0 mismatched days','0 mismatched days'],['CutoverGuard ownership','—','50 wrong-owner rows']]
+            return [[str(i),*v,'🟢 PASS' if i<6 else '🔴 BLOCKED'] for i,v in enumerate(values,1)]
         if self.n==3:return [[x[0],str(Decimal(x[3])/100),'Increase' if int(x[3])>0 else 'Decrease'] for x in r['account_effect_rows']]
         return [[x['order_id'],x['source_account_id'],'bad' if self.bad else x['candidate_account_id'],str(Decimal(x['amount_scaled_units'])/100),x['order_date']] for x in r['swaps']]
 
@@ -55,3 +57,13 @@ def test_live_verifier_requires_exact_order_ownership_and_signed_deltas():
     r=report()
     assert verify_queries(r,Runner(r))['status'].startswith('verified')
     with pytest.raises(CloudError,match='drilldown'):verify_queries(r,Runner(r,True))
+
+
+def test_pass_labels_do_not_verify_wrong_displayed_values():
+    from cutoverguard.databricks import CloudError
+    class BadValues(Runner):
+        def execute(self,sql):
+            rows=super().execute(sql)
+            if self.n==2:rows[0][2]='1499'
+            return rows
+    with pytest.raises(CloudError,match='displayed'):verify_queries(report(),BadValues(report()))

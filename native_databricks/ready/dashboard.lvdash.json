@@ -32,7 +32,7 @@
       "name": "retail_replay",
       "displayName": "Retail Replay",
       "queryLines": [
-        "SELECT 'defective' scenario,CAST(absolute_account_delta_minor/100 AS DECIMAL(38,2)) absolute_difference_gbp,(SELECT count(*) FROM `workspace`.`default`.`YOUR_RETAIL_DEFECTIVE_issues`) findings FROM `workspace`.`default`.`YOUR_RETAIL_DEFECTIVE_totals` WHERE currency='GBP' UNION ALL SELECT 'corrected',CAST(absolute_account_delta_minor/100 AS DECIMAL(38,2)),(SELECT count(*) FROM `workspace`.`default`.`YOUR_RETAIL_CORRECTED_issues`) FROM `workspace`.`default`.`YOUR_RETAIL_CORRECTED_totals` WHERE currency='GBP'\n"
+        "SELECT 'defective' scenario,CAST(absolute_account_delta_minor/100 AS DECIMAL(38,2)) absolute_difference_major,(SELECT count(*) FROM `workspace`.`default`.`YOUR_RETAIL_DEFECTIVE_issues`) findings FROM `workspace`.`default`.`YOUR_RETAIL_DEFECTIVE_totals` WHERE currency='GBP' UNION ALL SELECT 'corrected',CAST(absolute_account_delta_minor/100 AS DECIMAL(38,2)),(SELECT count(*) FROM `workspace`.`default`.`YOUR_RETAIL_CORRECTED_issues`) FROM `workspace`.`default`.`YOUR_RETAIL_CORRECTED_totals` WHERE currency='GBP'\n"
       ]
     },
     {
@@ -970,8 +970,8 @@
                       "expression": "`findings`"
                     },
                     {
-                      "name": "absolute_difference_gbp",
-                      "expression": "`absolute_difference_gbp`"
+                      "name": "absolute_difference_major",
+                      "expression": "`absolute_difference_major`"
                     }
                   ],
                   "disaggregated": true
@@ -992,8 +992,8 @@
                     "displayName": "Findings"
                   },
                   {
-                    "fieldName": "absolute_difference_gbp",
-                    "displayName": "Absolute Difference Gbp"
+                    "fieldName": "absolute_difference_major",
+                    "displayName": "Absolute Difference Major"
                   }
                 ]
               },

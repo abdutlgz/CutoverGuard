@@ -58,6 +58,11 @@ rows in explicit quarantine tables, and excludes them from the valid silver view
 Gold performs keyed ownership/amount/date reconciliation, customer allocation
 aggregation and separate crosswalk checks. Its decision also checks quarantine,
 nonempty input, duplicate crosswalk keys, completeness counts and total parity.
+Legacy row count, total and owner/order checksum expectations are pinned to the
+saved verified extract manifest, so silently shrinking the legacy extract cannot
+pass by shrinking both sides. These aggregate manifest checks are not a
+cryptographic authentication of every source row; the frozen legacy extract remains
+the trusted reference for keyed comparison.
 
 The `cutover_gate` materialized view has a readable expectation:
 

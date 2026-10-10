@@ -3,6 +3,7 @@ import argparse,json,re,sys
 from pathlib import Path
 ROOT=Path(__file__).resolve().parents[1];sys.path.insert(0,str(ROOT))
 from scripts.build_tpch_dashboard import validated
+from scripts.run_tpch_scale import checksum_sql,integer
 
 def literal(value):
     # TPC-H integer IDs rendered as readable string literals; never coerce IDs.
@@ -14,6 +15,9 @@ def literal(value):
 def pipeline_sql(report,bug=True):
     validated(report)
     source=report['tables']['source']
+    manifest=report['discovery']
+    expected_rows=integer(manifest['row_count']);expected_total=integer(manifest['total_scaled_units'])
+    expected_owner=integer(manifest['owner_checksum_unsigned64']);expected_keys=integer(manifest['order_checksum_unsigned64'])
     mapping='\nUNION ALL\n'.join(f"SELECT {literal(x['source_account_id'])} legacy_customer_id, {literal(x['candidate_account_id'])} cloud_customer_id" for x in report['swaps'])
     transform='coalesce(b.cloud_customer_id,c.legacy_customer_id)' if bug else 'c.legacy_customer_id'
     return f'''-- CutoverGuard: synthetic TPC-H customer-crosswalk migration.
@@ -92,6 +96,9 @@ WITH diagnostics AS (SELECT
 (SELECT count(*) FROM gold_crosswalk_issues) crosswalk_findings,
 (SELECT count(*) FROM source_quarantine)+(SELECT count(*) FROM candidate_quarantine) quarantined_rows,
 (SELECT count(*) FROM bronze_legacy_orders) legacy_rows,
+(SELECT sum(amount_scaled_units) FROM bronze_legacy_orders) legacy_total,
+(SELECT {checksum_sql('legacy_customer_id')} FROM bronze_legacy_orders) legacy_owner_checksum,
+(SELECT {checksum_sql('order_id')} FROM bronze_legacy_orders) legacy_key_checksum,
 (SELECT count(*) FROM silver_source) source_rows,
 (SELECT count(*) FROM silver_candidate) candidate_rows,
 (SELECT sum(amount_scaled_units) FROM silver_source) source_total,
@@ -99,6 +106,8 @@ WITH diagnostics AS (SELECT
 (SELECT count(*) FROM (SELECT legacy_customer_id FROM bronze_migration_crosswalk GROUP BY legacy_customer_id HAVING count(*)<>1)) duplicate_crosswalk_keys
 ) SELECT *,CASE WHEN order_findings=0 AND crosswalk_findings=0 AND quarantined_rows=0
 AND duplicate_crosswalk_keys=0 AND legacy_rows>0 AND source_rows=legacy_rows AND candidate_rows=legacy_rows
+AND legacy_rows={expected_rows} AND legacy_total={expected_total}
+AND legacy_owner_checksum='{expected_owner}' AND legacy_key_checksum='{expected_keys}'
 AND source_total<=>candidate_total THEN 'ready' ELSE 'blocked' END status FROM diagnostics;
 
 CREATE OR REFRESH MATERIALIZED VIEW cutover_gate (

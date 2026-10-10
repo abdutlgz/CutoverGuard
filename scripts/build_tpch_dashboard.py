@@ -1,7 +1,7 @@
 """Build the final TPC-H-first native dashboard; optional read-only live SQL checks."""
 import argparse
 from copy import deepcopy
-from decimal import Decimal
+from decimal import Decimal,localcontext
 import hashlib
 import json
 from pathlib import Path
@@ -59,17 +59,19 @@ def build(report,retail,corrected,report_sha):
         layout.append(widget('scale_'+field,'scale_kpis',[field],'counter',title,x,2,w,3,{'value':{'fieldName':field,'displayName':title}}))
     layout.extend([
       widget('scale_checklist','scale_checks',['check_name','source_value','candidate_value','result_label'],'table','Same snapshots: five PASS checks, ownership BLOCKED',0,5,12,5),
-      widget('scale_diverging','scale_effects',['customer','signed_price_units','direction'],'bar','50 customer effects • signed price units • net zero',0,10,12,7,{'x':{'fieldName':'customer','scale':{'type':'categorical'},'displayName':'Customer'},'y':{'fieldName':'signed_price_units','scale':{'type':'quantitative'},'displayName':'Candidate − source (price units)'},'color':{'fieldName':'direction','scale':{'type':'categorical','mappings':[{'value':'Increase','color':'#16803D'},{'value':'Decrease','color':'#DC2626'}]}}}),
+      widget('scale_diverging','scale_effects',['customer','signed_price_units','direction'],'bar',f'{v["impacted_customer_buckets"]} customer effects • signed price units • net zero',0,10,12,7,{'x':{'fieldName':'customer','scale':{'type':'categorical'},'displayName':'Customer'},'y':{'fieldName':'signed_price_units','scale':{'type':'quantitative'},'displayName':'Candidate − source (price units)'},'color':{'fieldName':'direction','scale':{'type':'categorical','mappings':[{'value':'Increase','color':'#16803D'},{'value':'Decrease','color':'#DC2626'}]}}}),
       widget('scale_orders','scale_drilldown',['order_key','original_owner','migrated_owner','price_units','order_date'],'table','Wrong-owner orders • largest price first',0,17,12,7),
     ])
     retail_part=retail_dashboard(retail)
     retail_layout=retail_part['pages'][0]['layout']
-    retail_layout[0]=text('retail_story',['# Real public records: UCI Online Retail\n','1,467 historical invoice lines per side. Deliberately controlled owner defects; corrected replay restores parity.'],0,0,12,2)
+    currency=retail['currency_totals'][0]['currency']
+    count=len(retail['input_bundle']['source']['transactions'])
+    retail_layout[0]=text('retail_story',['# Real public records: UCI Online Retail\n',f'{count:,} historical invoice lines per side. Deliberately controlled owner defects; corrected replay restores parity.'],0,0,12,2)
     for item in retail_layout[1:]:item['position']['y']-=1
     # Keep the real-record demonstration; omit the trivial corrected-zero bar.
     rt=retail['execution']['tables']['totals'];ft=corrected['execution']['tables']['totals']
-    q['retail_replay']=f"SELECT 'defective' scenario,CAST(absolute_account_delta_minor/100 AS DECIMAL(38,2)) absolute_difference_gbp,(SELECT count(*) FROM {retail['execution']['tables']['issues']}) findings FROM {rt} WHERE currency='GBP' UNION ALL SELECT 'corrected',CAST(absolute_account_delta_minor/100 AS DECIMAL(38,2)),(SELECT count(*) FROM {corrected['execution']['tables']['issues']}) FROM {ft} WHERE currency='GBP'"
-    retail_layout.append(widget('retail_replay','retail_replay',['scenario','findings','absolute_difference_gbp'],'table','Corrected replay — GBP',0,22,12,4))
+    q['retail_replay']=f"SELECT 'defective' scenario,CAST(absolute_account_delta_minor/100 AS DECIMAL(38,2)) absolute_difference_major,(SELECT count(*) FROM {retail['execution']['tables']['issues']}) findings FROM {rt} WHERE currency='{currency}' UNION ALL SELECT 'corrected',CAST(absolute_account_delta_minor/100 AS DECIMAL(38,2)),(SELECT count(*) FROM {corrected['execution']['tables']['issues']}) FROM {ft} WHERE currency='{currency}'"
+    retail_layout.append(widget('retail_replay','retail_replay',['scenario','findings','absolute_difference_major'],'table',f'Corrected replay — {currency}',0,22,12,4))
     evidence_lines=['# Evidence and limitations\n',f'TPC-H source/candidate: {report["discovery"]["row_count"]:,} orders each; {v["changed_owner_rows"]} deliberately changed owners. Completed: {report["completed_at"]}.\n',f'Run evidence SHA256: `{report_sha}`. Isolated run: `{report["prefix"]}`.\n','Synthetic wholesale benchmark; arbitrary price units, no currency. Narrow SQL reconciliation, not full local-engine equivalence, bank data or loss prevention.\n','Timing is the sum of recorded SQL submit/poll/fetch intervals; includes possible startup and transfers. Discovery is separate. It is not query-engine runtime, GPU timing, or a performance comparison.\n','Owner and order checksums are permutation-invariant. Keyed row-diff tools also catch ownership swaps; CutoverGuard adds signed allocation effects and a review verdict.\n',f'Retail defective fingerprint: `{retail["run_id"]}`; corrected: `{corrected["run_id"]}`.\n','UCI Online Retail DOI 10.24432/C5BW33, CC BY 4.0. Historical customer-derived invoice buckets are not bank accounts or cash settlements. Controlled defects, not observed migration errors.\n','Ready for human review is not production approval. Lakeflow gate execution is separate and must be independently verified.']
     body={'datasets':[{'name':k,'displayName':k.replace('_',' ').title(),'queryLines':[sql+'\n']} for k,sql in q.items()]+retail_part['datasets'], 'pages':[
       {'name':'scale_main','displayName':'7.5 million orders' if report['discovery']['row_count']==7500000 else f"{report['discovery']['row_count']:,} orders",'pageType':'PAGE_TYPE_CANVAS','layout':layout},
@@ -85,6 +87,16 @@ def verify_queries(report,runner):
     if abs(Decimal(str(rows[0][4]))-sum(Decimal(str(x['elapsed_seconds'])) for x in report['timings']))>Decimal('0.000001'):raise CloudError('Timing constant differs.')
     checks=results['scale_checks']
     if len(checks)!=6 or [integer(x[0]) for x in checks]!=list(range(1,7)) or [x[4] for x in checks]!=['🟢 PASS']*5+['🔴 BLOCKED']:raise CloudError('Live five-check baseline or ownership result differs.')
+    d=report['discovery']
+    with localcontext() as context:
+        context.prec=80
+        total=format(Decimal(d['total_scaled_units'])/100,'.2f')
+    expected=[['Row count',str(d['row_count']),str(d['row_count'])],['Total price units',total,total],
+              ['Owner-ID checksum',d['owner_checksum_unsigned64'],d['owner_checksum_unsigned64']],
+              ['Order-key checksum',d['order_checksum_unsigned64'],d['order_checksum_unsigned64']],
+              ['Daily price totals','0 mismatched days','0 mismatched days'],
+              ['CutoverGuard ownership','—','50 wrong-owner rows']]
+    if [list(x[1:4]) for x in checks]!=expected:raise CloudError('Live displayed check names or source/candidate values differ.')
     wanted={str(x[0]):Decimal(x[3])/100 for x in report['account_effect_rows']}
     observed={str(x[0]):Decimal(str(x[1])) for x in results['scale_effects']}
     if len(results['scale_effects'])!=len(wanted) or observed!=wanted or sum(observed.values())!=0:raise CloudError('Live signed customer effects differ.')

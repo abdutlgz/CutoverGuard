@@ -60,7 +60,8 @@ def sources(root):
         if folder.exists():
             selected += [(str(p.relative_to(root)), str(p.relative_to(root)))
                          for p in sorted(folder.rglob('*')) if p.is_file() and p.suffix in extensions
-                         and '__pycache__' not in p.parts]
+                         and '__pycache__' not in p.parts
+                         and str(p.relative_to(root))!='databricks_demo/ready/lakeflow_pipeline.sql']
     selected += [('scripts/' + n, 'scripts/' + n) for n in SCRIPTS if (root / 'scripts' / n).is_file()]
     selected += [('tests/' + n, 'tests/' + n) for n in TESTS if (root / 'tests' / n).is_file()]
     selected += [(n, n) for n in EVIDENCE if (root / n).is_file()]

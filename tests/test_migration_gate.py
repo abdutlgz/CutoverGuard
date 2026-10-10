@@ -9,6 +9,8 @@ def test_gate_is_downstream_of_findings_quarantine_and_completeness():
     assert "CROSS JOIN cutover_gate g WHERE g.status='ready'" in bad
     assert 'quarantined_rows=0' in bad and 'candidate_rows=legacy_rows' in bad
     assert 'source_rows=legacy_rows' in bad and 'duplicate_crosswalk_keys=0' in bad
+    assert 'legacy_rows=7500000 AND legacy_total=123456789' in bad
+    assert "legacy_owner_checksum='987' AND legacy_key_checksum='654'" in bad
     assert 'NOT(s.account_id<=>c.account_id)' in bad
     assert 'NOT(s.amount_scaled_units<=>c.amount_scaled_units)' in bad
     assert 'NOT(s.event_utc<=>c.event_utc)' in bad
