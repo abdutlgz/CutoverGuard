@@ -17,6 +17,21 @@ TPC-H uses arbitrary price units, not currency; these are deliberate demonstrati
 [Saved pipeline evidence](evidence/pipeline-promotion-summary.json) ·
 [Dashboard and migration gate](docs/tpch-dashboard-and-gate.md).
 
+![Databricks dashboard: row count and totals pass while crosswalk and order ownership are blocked](docs/images/dashboard-overview.png)
+
+The defective promotion gate fails on `no_wrong_owner_promotion`; the output record
+shows 811 order findings with identical source and candidate totals:
+
+![Lakeflow promotion gate failing on the defective migration](docs/images/gate-defective-blocked.png)
+
+The corrected migration meets the expectation and promotes 7,500,000 rows:
+
+![Lakeflow promotion gate passing on the corrected migration](docs/images/gate-corrected-promoted.png)
+
+![Persisted gold decisions: defective blocked, corrected ready](docs/images/defective-vs-corrected.png)
+
+Screenshots were cropped to remove browser chrome and account details.
+
 An earlier, separate SQL experiment swapped **50 order owners**, preserving totals and
 owner/key checksums. Its [saved evidence](evidence/tpch-scale-summary.json) remains a
 separate experiment; whole-customer crosswalk remapping need not preserve owner checksums.
