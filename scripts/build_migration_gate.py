@@ -44,12 +44,12 @@ ON c.legacy_customer_id=b.legacy_customer_id;
 
 CREATE OR REFRESH MATERIALIZED VIEW typed_source AS
 SELECT order_id,legacy_customer_id account_id,CAST(amount_scaled_units AS DECIMAL(38,0)) amount_scaled_units,
-order_date,CAST(order_date AS TIMESTAMP_NTZ) event_utc,
+order_date,CAST(concat(CAST(order_date AS STRING),'T00:00:00Z') AS TIMESTAMP_LTZ) event_utc,
 count(*) OVER (PARTITION BY order_id) key_count FROM bronze_legacy_orders;
 
 CREATE OR REFRESH MATERIALIZED VIEW typed_candidate AS
 SELECT s.order_id,c.cloud_customer_id account_id,CAST(s.amount_scaled_units AS DECIMAL(38,0)) amount_scaled_units,
-s.order_date,CAST(s.order_date AS TIMESTAMP_NTZ) event_utc,
+s.order_date,CAST(concat(CAST(s.order_date AS STRING),'T00:00:00Z') AS TIMESTAMP_LTZ) event_utc,
 count(*) OVER (PARTITION BY s.order_id) key_count
 FROM bronze_legacy_orders s LEFT JOIN bronze_migration_crosswalk c
 ON s.legacy_customer_id=c.legacy_customer_id;

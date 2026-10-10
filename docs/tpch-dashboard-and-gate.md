@@ -58,7 +58,7 @@ it is not proof the financial gate worked.
 The swapped customer crosswalk remaps **every order** belonging to 50 selected
 customers. Do not reuse the original experiment's 50 wrong-owner-order count:
 this new count must be measured. Bronze retains legacy and crosswalk records;
-silver uses DECIMAL amounts, DATE interpreted at UTC midnight, typed keys and
+silver uses DECIMAL amounts, DATE converted to an explicit UTC midnight instant using a Z-suffixed string and TIMESTAMP_LTZ, typed keys and
 explicit quarantines. Gold checks row ownership, amounts, timestamps, crosswalk
 relations, duplicate keys, quarantine, completeness and matching totals. The legacy
 count, total and owner/order checksums are pinned to the verified extract manifest.
@@ -93,3 +93,11 @@ a failing update. [Expectations documentation](https://docs.databricks.com/aws/e
 
 This is a controlled synthetic benchmark migration, not banking data, a leading-zero
 collision, full local-engine equivalence, production approval or a BNY integration.
+
+## Timestamp compatibility fix
+
+The first live update failed with DELTA_FEATURES_REQUIRE_MANUAL_ENABLEMENT for timestampNtz.
+The generator now uses TIMESTAMP_LTZ with an explicit T00:00:00Z suffix on both sides,
+preserving the UTC-midnight convention without requiring timestampNtz on pipeline tables.
+Timestamp rendering can follow the session timezone; comparisons use the absolute instant.
+[Databricks timestamp type](https://docs.databricks.com/aws/en/sql/language-manual/data-types/timestamp-type).

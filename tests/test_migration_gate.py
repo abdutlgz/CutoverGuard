@@ -40,3 +40,11 @@ def test_separate_promotion_reads_persisted_evidence_and_rejects_schema_injectio
     assert 'FAIL UPDATE' in sql and 'CROSS JOIN cutover_gate' in sql
     assert 'bronze_legacy_orders' not in sql
     with pytest.raises(ValueError):promotion_sql('bad; DROP SCHEMA default')
+
+
+def test_pipeline_timestamp_is_an_explicit_utc_instant_without_ntz_feature():
+    for bug in (True,False):
+        sql=pipeline_sql(report(),bug)
+        assert 'TIMESTAMP_NTZ' not in sql
+        assert "CAST(concat(CAST(order_date AS STRING),'T00:00:00Z') AS TIMESTAMP_LTZ)" in sql
+        assert "CAST(concat(CAST(s.order_date AS STRING),'T00:00:00Z') AS TIMESTAMP_LTZ)" in sql
