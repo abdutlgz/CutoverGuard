@@ -16,3 +16,6 @@ native_databricks/*/
 databricks_files/
 public_retail_validation/
 submission_build/
+
+evidence/screenshots/
+genie_pipeline/

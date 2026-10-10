@@ -186,3 +186,9 @@ remain pending.
 ## Reproducing this publication snapshot
 
 The included cloud reports and native payloads capture the original synthetic demo; their table names do not imply access in another workspace. Run fresh SQL fixtures in your own workspace, then pass their report paths to native setup. Native update/recovery commands require your own saved state. Public-retail extracts are regenerated using the documented UCI download and attribution; raw or customer-derived extracts are excluded here. The included ingestion tests use invented invoice lines.
+
+## Genie on pipeline evidence
+
+The new migration-review Genie space reads the pipeline gold tables. Five SQL-grounded benchmarks scored 4/5 initially; one missing price-unit conversion was fixed with a curated SQL example, then the unchanged suite scored 5/5. This is a tuned five-question regression test, not a general reliability claim. See [benchmark method and evidence](docs/genie-benchmarks.md).
+
+![Pipeline dashboard with full numbers](assets/demo/dashboard-pipeline.png)

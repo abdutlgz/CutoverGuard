@@ -1,0 +1,40 @@
+{
+  "data_kind": "synthetic",
+  "scope": "Five Chat-mode SQL-answer benchmarks on frozen pipeline gold tables; one initial run and one regression run after tuning",
+  "initial": {
+    "run_id": "01f1c4f85e651e839d693a3fd184c385",
+    "good": 4,
+    "total": 5,
+    "failed_question": "totals",
+    "failure": "Missing /100 price-unit conversion"
+  },
+  "tuning": "One independently verified side-total SQL example added; ground truth unchanged",
+  "retest": {
+    "run_id": "01f1c4f8dfc714adb5d2a36486a5b55d",
+    "good": 5,
+    "total": 5
+  },
+  "ground_truth": {
+    "order_findings": 811,
+    "crosswalk_findings": 50,
+    "rows_per_side": 7500000,
+    "price_units_per_side": "1133439215246.25",
+    "largest_positive_customer": "92948",
+    "largest_positive_difference_price_units": "3096745.42",
+    "net_signed_difference_price_units": "0.00",
+    "changed_customers": 50
+  },
+  "limitations": [
+    "Five questions, one dataset, no held-out reliability estimate",
+    "Retest follows tuning on the failed question",
+    "SQL result comparison does not evaluate all explanatory claims",
+    "SELECT-only instruction is not a permission restriction",
+    "No production readiness, prevention or loss claim"
+  ],
+  "manual_demo_checks": {
+    "blocked_counts": "matched",
+    "counts_and_price_totals": "matched",
+    "largest_positive_allocation": "matched",
+    "wording_note": "Use largest positive allocation difference rather than gained; not profit or loss."
+  }
+}

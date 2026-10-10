@@ -15,8 +15,8 @@ def queries(bad='cutoverguard_migration_bad',fixed='cutoverguard_migration_fixed
         raise ValueError('Use simple evidence schema identifiers')
     b=f'`workspace`.`{bad}`';f=f'`workspace`.`{fixed}`'
     checks=f"""WITH d AS (SELECT * FROM {b}.gold_cutover_decision), raw AS (
-SELECT 1 ordinal,'Row count' check_name,CAST(source_rows AS STRING) source_value,CAST(candidate_rows AS STRING) candidate_value,source_rows=candidate_rows AND source_rows=legacy_rows passed FROM d
-UNION ALL SELECT 2,'Total price units',CAST(CAST(source_total/100 AS DECIMAL(38,2)) AS STRING),CAST(CAST(candidate_total/100 AS DECIMAL(38,2)) AS STRING),source_total<=>candidate_total FROM d
+SELECT 1 ordinal,'Row count' check_name,format_number(source_rows,0) source_value,format_number(candidate_rows,0) candidate_value,source_rows=candidate_rows AND source_rows=legacy_rows passed FROM d
+UNION ALL SELECT 2,'Total price units',format_number(CAST(source_total/100 AS DECIMAL(38,2)),2),format_number(CAST(candidate_total/100 AS DECIMAL(38,2)),2),source_total<=>candidate_total FROM d
 UNION ALL SELECT 3,'Quarantine','0 rows',concat(CAST(quarantined_rows AS STRING),' rows'),quarantined_rows=0 FROM d
 UNION ALL SELECT 4,'Crosswalk mapping','Expected customer',concat(CAST(crosswalk_findings AS STRING),' wrong mappings'),crosswalk_findings=0 FROM d
 UNION ALL SELECT 5,'Order ownership','Original owner',concat(CAST(order_findings AS STRING),' wrong-owner orders'),order_findings=0 FROM d
@@ -46,6 +46,11 @@ def build_pipeline(report,retail,corrected,report_sha,bad,fixed):
                 for field in query['query']['fields']:
                     if field.get('name')=='order_date':field.update(name='original_utc',expression='`original_utc`')
             w['spec']['encodings']['columns']=[x for x in w['spec']['encodings']['columns'] if x.get('fieldName')!='order_date']
+        if name=='scale_orders':
+            w['spec']['encodings']['value']['format']={'type':'number-plain','abbreviation':'none','decimalPlaces':{'type':'max','places':0}}
+        if name=='scale_total_difference_scaled':
+            w['spec']['frame']['title']='Firm total difference'
+            w['spec']['encodings']['value']['displayName']='Firm total difference'
         if name=='scale_checklist':w['spec']['frame']['title']='Aggregate parity versus crosswalk and ownership'
         layout.append(x)
     layout += [widget('pipeline_crosswalk_counter','scale_kpis',['crosswalk_findings'],'counter','Wrong customer mappings',6,2,3,3,{'value':{'fieldName':'crosswalk_findings','displayName':'Wrong customer mappings'}})]

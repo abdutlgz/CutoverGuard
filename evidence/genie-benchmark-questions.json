@@ -1,0 +1,91 @@
+[
+  {
+    "id": "blocked",
+    "question": "Why is this migration blocked? Return status, order findings, crosswalk findings, quarantined rows, and source and candidate totals in price units.",
+    "sql": "SELECT status, order_findings, crosswalk_findings, quarantined_rows, CAST(source_total/100 AS DECIMAL(38,2)) source_total_price_units, CAST(candidate_total/100 AS DECIMAL(38,2)) candidate_total_price_units FROM workspace.cutoverguard_migration_bad.gold_cutover_decision",
+    "status": "good",
+    "expected_rows": [
+      [
+        "blocked",
+        811,
+        50,
+        0,
+        "1133439215246.25",
+        "1133439215246.25"
+      ]
+    ],
+    "ground_truth_sql_execution": "verified_in_native_preview",
+    "initial_run_id": "01f1c4f85e651e839d693a3fd184c385",
+    "retest_status": "good",
+    "retest_run_id": "01f1c4f8dfc714adb5d2a36486a5b55d"
+  },
+  {
+    "id": "totals",
+    "question": "Do total counts and amounts match? Return side, row count and total price units for source and candidate.",
+    "sql": "SELECT side, row_count, CAST(total_scaled_units/100 AS DECIMAL(38,2)) total_price_units FROM workspace.cutoverguard_migration_bad.gold_aggregate_checks ORDER BY side",
+    "status": "bad",
+    "expected_rows": [
+      [
+        "candidate",
+        7500000,
+        "1133439215246.25"
+      ],
+      [
+        "source",
+        7500000,
+        "1133439215246.25"
+      ]
+    ],
+    "ground_truth_sql_execution": "verified_in_native_preview",
+    "initial_run_id": "01f1c4f85e651e839d693a3fd184c385",
+    "failure": "Returned total_scaled_units without dividing by 100; required price-unit output omitted.",
+    "retest_status": "good",
+    "retest_run_id": "01f1c4f8dfc714adb5d2a36486a5b55d"
+  },
+  {
+    "id": "top_customer",
+    "question": "Which customer has the largest positive allocation difference? Return its account ID and signed difference in price units.",
+    "sql": "SELECT account_id, CAST(delta_scaled_units/100 AS DECIMAL(38,2)) signed_difference_price_units FROM workspace.cutoverguard_migration_bad.gold_customer_effects WHERE delta_scaled_units>0 ORDER BY delta_scaled_units DESC, account_id LIMIT 1",
+    "status": "good",
+    "expected_rows": [
+      [
+        "92948",
+        "3096745.42"
+      ]
+    ],
+    "ground_truth_sql_execution": "verified_in_native_preview",
+    "initial_run_id": "01f1c4f85e651e839d693a3fd184c385",
+    "retest_status": "good",
+    "retest_run_id": "01f1c4f8dfc714adb5d2a36486a5b55d"
+  },
+  {
+    "id": "net",
+    "question": "Across all customers, what is the net signed allocation difference in price units?",
+    "sql": "SELECT CAST(SUM(delta_scaled_units)/100 AS DECIMAL(38,2)) net_signed_difference_price_units FROM workspace.cutoverguard_migration_bad.gold_customer_effects",
+    "status": "good",
+    "expected_rows": [
+      [
+        "0.00"
+      ]
+    ],
+    "ground_truth_sql_execution": "verified_in_native_preview",
+    "initial_run_id": "01f1c4f85e651e839d693a3fd184c385",
+    "retest_status": "good",
+    "retest_run_id": "01f1c4f8dfc714adb5d2a36486a5b55d"
+  },
+  {
+    "id": "changed_customers",
+    "question": "How many customers have a nonzero allocation difference?",
+    "sql": "SELECT COUNT(*) changed_customers FROM workspace.cutoverguard_migration_bad.gold_customer_effects WHERE delta_scaled_units<>0",
+    "status": "good",
+    "expected_rows": [
+      [
+        50
+      ]
+    ],
+    "ground_truth_sql_execution": "verified_in_native_preview",
+    "initial_run_id": "01f1c4f85e651e839d693a3fd184c385",
+    "retest_status": "good",
+    "retest_run_id": "01f1c4f8dfc714adb5d2a36486a5b55d"
+  }
+]

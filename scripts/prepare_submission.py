@@ -34,7 +34,11 @@ EVIDENCE = ('cutover_results/defective-cloud-v2.json', 'cutover_results/fixed-cl
             'amd_results/benchmark-1m.VAll9q.json','experiments/randomized-002.json','experiments/randomized-002.md',
             'evidence/tpch-scale-summary.json','evidence/aggregate-checks-summary.json',
             'evidence/independent-crosswalk-count.sql','evidence/verify-pipeline-promotion.sql',
-            'evidence/pipeline-promotion-summary.json')
+            'evidence/pipeline-promotion-summary.json', 'evidence/genie-benchmark-summary.json', 'evidence/genie-benchmark-questions.json',
+            'assets/demo/dashboard-pipeline.png','assets/demo/promotion-gate-failed.png',
+            'assets/demo/genie-initial-benchmark.png','assets/demo/genie-regression-benchmark.png',
+            'assets/demo/genie-unit-conversion-failure.png','assets/demo/genie-blocked-explanation.png',
+            'assets/demo/genie-totals-explanation.png','assets/demo/genie-top-customer-explanation.png')
 EXCLUDED = ['.env and credentials/keys', '.venv and caches', 'prep except selected public guides',
             'AGENTS.md and SummaryAndReview', 'AlphaAudit app.py/alpha_audit/static/examples',
             'native run state and diagnostics', 'raw public dataset and generated retail extracts',
@@ -69,12 +73,14 @@ def sources(root):
     selected += [(n, n) for n in EVIDENCE if (root / n).is_file()]
     selected += [('prep/cutoverguard-' + n + '.md', 'docs/cutoverguard-' + n + '.md')
                  for n in DOCS if (root / ('prep/cutoverguard-' + n + '.md')).is_file()]
-    selected += [('docs/'+n,'docs/'+n) for n in ('ownership-evidence.md','tpch-scale.md','tpch-dashboard-and-gate.md') if (root/'docs'/n).is_file()]
+    selected += [('docs/'+n,'docs/'+n) for n in ('ownership-evidence.md','tpch-scale.md','tpch-dashboard-and-gate.md','genie-benchmarks.md') if (root/'docs'/n).is_file()]
     return sorted(set(selected))
 
 
 def transform(source, data):
     changes = []
+    if source.endswith('.png'):
+        return data, changes  # Visually reviewed crops; never rewrite compressed evidence bytes.
     configuration = ROOT / '.redactions.json'
     if configuration.is_file():
         rules = json.loads(configuration.read_text()).get('replacements', [])
