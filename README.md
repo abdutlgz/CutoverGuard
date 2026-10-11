@@ -1,40 +1,59 @@
 # CutoverGuard
 
-**Same total. Different owner.** A cloud-migration review prototype built for the
-BNY Financial Services Challenge and the Databricks challenge. It compares source
-and candidate account/transaction snapshots, exposes ownership errors hidden by
-matching totals, and exports exact evidence for human review.
+**Every record checked. Every bad cutover blocked.** CutoverGuard is a cutover gate for
+financial data migrations on Databricks. Run a migration through it: it compares legacy
+and migrated data record by record, by key, passes the good migrations and blocks the bad
+ones, including the wrong-owner errors that every total check misses. Built for the BNY
+Financial Services Challenge and the Databricks challenge at Knight Hacks IX.
 
-## Verified migration pipeline
+## What it checks
 
-**7,500,000 synthetic orders · 50 faulty customer mappings · 811 wrong-owner orders.**
+| Check, per record | Do totals see it? |
+|---|---|
+| Wrong totals, row counts | Yes |
+| Duplicates, missing or extra records | Sometimes |
+| Changed amounts, dates, currency | Sometimes |
+| Malformed rows (quarantined, never silently dropped) | No |
+| **Record attached to the wrong owner, totals intact** | **Never** |
+
+Output: every finding by key, the signed effect on each account, and one decision:
+**BLOCKED**, **INCOMPLETE** or **READY for human review**. A failing decision promotes nothing.
+
+## Verified on Databricks: 7.5 million orders
+
+**7,500,000 synthetic orders · 50 faulty customer mappings · 811 wrong-owner orders · totals identical.**
 An independent frozen-source SQL count confirmed all 811 affected orders. The defective
 promotion failed on `no_wrong_owner_promotion` and created no promotion output table.
 The corrected promotion passed: 7,500,000 rows, zero keyed owner/amount/time differences
 against its silver source. Signed effects across 50 customer buckets sum exactly to zero.
-The native dashboard reads the persisted pipeline gold tables and its rendering was checked.
 TPC-H uses arbitrary price units, not currency; these are deliberate demonstration defects.
 [Saved pipeline evidence](evidence/pipeline-promotion-summary.json) ·
 [Dashboard and migration gate](docs/tpch-dashboard-and-gate.md).
 
 ![Databricks dashboard: totals pass, ownership blocked, gate decision and signed customer effects](docs/images/dashboard-overview.png)
 
-The Lakeflow evidence pipeline builds bronze (legacy extract, crosswalks), silver
-(typed, keyed, quarantine) and gold (findings, customer effects, cutover decision)
-for both the defective and the corrected migration:
+Who received whose orders: 25 customers over-allocated, 25 under-allocated, net exactly zero.
 
-![Defective evidence pipeline: 15 tables, completed](docs/images/pipeline-evidence-defective.png)
+![Signed customer allocation change, sorted, netting to zero](docs/images/customer-effects.png)
 
-![Corrected evidence pipeline: 15 tables, completed](docs/images/pipeline-evidence-corrected.png)
+## The pipeline
 
-The defective promotion gate fails on `no_wrong_owner_promotion` and `promoted_orders`
-is skipped, so nothing is promoted:
+A 15-table Lakeflow pipeline: bronze (legacy extract, ID mappings) → silver (typed, UTC,
+one row per key, quarantine via expectations) → gold (findings, customer effects,
+aggregate checks) → one `gold_cutover_decision` row that the gate reads.
 
-![Lakeflow promotion gate failing on the defective migration](docs/images/gate-defective-blocked.png)
+![Lakeflow evidence pipeline: 15 tables converging into the cutover decision](docs/images/pipeline-tree.png)
 
-The corrected migration meets the expectation and promotes 7,500,000 rows:
+## The gate
 
-![Lakeflow promotion gate passing on the corrected migration](docs/images/gate-corrected-promoted.png)
+A separate promotion pipeline: `EXPECT (status = 'ready') ON VIOLATION FAIL UPDATE`.
+On the defective migration the gate fails and `promoted_orders` is skipped:
+
+![Promotion gate failing on the defective migration; promoted_orders skipped](docs/images/gate-defective-graph.png)
+
+On the corrected migration the gate passes and promotes 7,500,000 rows:
+
+![Promotion gate passing on the corrected migration; 7.5M rows promoted](docs/images/gate-corrected-graph.png)
 
 Screenshots were cropped to remove browser chrome and account details.
 

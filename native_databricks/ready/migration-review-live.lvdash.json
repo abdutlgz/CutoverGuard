@@ -87,8 +87,8 @@
       "name": "scale_story",
       "multilineTextboxSpec": {
        "lines": [
-        "# Same total. Wrong customers.\n",
-        "A swapped customer crosswalk reallocates whole order histories across **7.5M orders**. Persisted Lakeflow gold results show exactly which orders and customers changed — and the pipeline promotion gate that blocks them."
+        "# Every record checked. Every bad cutover blocked.\n",
+        "CutoverGuard compares legacy and migrated data **record by record** across **7.5M orders**: totals, duplicates, missing rows, amounts and owners. Here a swapped customer mapping moves 811 orders to the wrong owner while every total still matches, so the Lakeflow gate blocks promotion."
        ]
       }
      },
