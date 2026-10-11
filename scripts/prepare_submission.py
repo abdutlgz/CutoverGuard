@@ -11,19 +11,19 @@ import sys
 
 ROOT = Path(__file__).resolve().parents[1]
 TREES = {'cutoverguard': {'.py'}, 'cutover_static': {'.html', '.css', '.js'},
-         'cutover_examples': {'.json'}, 'amd': {'.py', '.md'},
+         'cutover_examples': {'.json'},
          'databricks_demo/ready': {'.sql', '.json'}, 'native_databricks/ready': {'.json','.md'},
          'databricks_demo/migration-final': {'.sql'}}
 SCRIPTS = ('build_cutover_examples.py', 'build_cutover_preview.py', 'build_databricks_demo.py', 'build_retail_dashboard.py', 'build_retail_genie.py',
            'check_databricks.py', 'run_cutoverguard_databricks.py', 'run_cutoverguard_files.py',
            'setup_cutoverguard_native.py', 'setup_cutoverguard_volume.py', 'update_cutoverguard_dashboard.py',
            'inspect_cutoverguard_upload.py',
-           'validate_public_retail.py', 'radeon_ssh.sh', 'prepare_submission.py',
+           'validate_public_retail.py', 'prepare_submission.py',
            'run_defect_experiment.py','run_tpch_scale.py','verify_aggregate_baseline.py',
            'build_tpch_dashboard.py','build_migration_gate.py','build_pipeline_dashboard.py')
 TESTS = ('test_cutover_engine.py', 'test_cutover_databricks.py', 'test_cutover_http.py',
          'test_cutover_replay.py', 'test_databricks_demo.py', 'test_native_databricks.py',
-         'test_public_retail.py', 'test_amd_ledger.py', 'test_dashboard_dollars.py',
+         'test_public_retail.py', 'test_dashboard_dollars.py',
          'test_file_ingestion.py', 'test_volume_setup.py', 'test_upload_inspection.py',
          'test_historical_cloud_import.py', 'test_retail_dashboard.py', 'test_prepare_submission.py',
          'test_retail_genie.py','test_aggregate_baseline.py','test_defect_experiment.py',
@@ -31,7 +31,7 @@ TESTS = ('test_cutover_engine.py', 'test_cutover_databricks.py', 'test_cutover_h
 DOCS = ('contract', 'databricks', 'native', 'real-data', 'file-ingestion', 'demo')
 EVIDENCE = ('cutover_results/defective-cloud-v2.json', 'cutover_results/fixed-cloud.json',
             'databricks_files/retail-run-002/verification-summary.json',
-            'amd_results/benchmark-1m.VAll9q.json','experiments/randomized-002.json','experiments/randomized-002.md',
+            'experiments/randomized-002.json','experiments/randomized-002.md',
             'evidence/tpch-scale-summary.json','evidence/aggregate-checks-summary.json',
             'evidence/independent-crosswalk-count.sql','evidence/verify-pipeline-promotion.sql',
             'evidence/pipeline-promotion-summary.json', 'evidence/genie-benchmark-summary.json', 'evidence/genie-benchmark-questions.json',
@@ -204,7 +204,7 @@ def prepare(root, destination, run_tests=True):
         out.write_bytes(value)
         manifest['files'].append({'source': source, 'target': target, 'source_sha256': sha(raw),
                                   'staged_sha256': sha(value), 'transformations': changes})
-    (destination / 'requirements.txt').write_text('pytest>=9,<10\n# Runtime uses the standard library. Optional: openpyxl for XLSX; PyTorch ROCm on AMD only.\n')
+    (destination / 'requirements.txt').write_text('pytest>=9,<10\n# Runtime uses the standard library. Optional: openpyxl for XLSX.\n')
     (destination / '.gitignore').write_text('.venv/\n.env\n.env.*\n__pycache__/\n.pytest_cache/\n*.pem\n*.key\nid_rsa*\nid_ed25519*\n.databrickscfg\n.redactions.json\npublication-manifest.json\n.DS_Store\nnative_databricks/*/\n!native_databricks/ready/\ndatabricks_files/\npublic_retail_validation/\nsubmission_build/\n')
     preview = subprocess.run([sys.executable, 'scripts/build_cutover_preview.py'], cwd=destination,
                              capture_output=True, timeout=30)

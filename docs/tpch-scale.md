@@ -67,8 +67,7 @@ hex digits as an unsigned 64-bit integer, sum across orders, and reduce modulo
 2^64. The SQL and Python definition match. Swapping owners preserves this
 permutation-invariant checksum even when the exact order ownership is wrong.
 The row-by-row keyed findings detect that error. The checksum is an illustrative
-aggregate diagnostic, **not a row-aware integrity proof**, financial approval,
-or AMD benchmark result. Order-ID checksums are also aggregate diagnostics.
+aggregate diagnostic, **not a row-aware integrity proof** or financial approval. Order-ID checksums are also aggregate diagnostics.
 
 ## Evidence and safe resumption
 

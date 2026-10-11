@@ -73,5 +73,5 @@ truncation, missing rows and unexpected external links cannot produce a verified
 The runner does not stop the warehouse or manage external accounts.
 
 Databricks SDK/runtime is unnecessary. Python3.12 standard library + installed
-Databricks CLI suffice. GPU/AMD/ARCC is not required for these joins and exact sums.
+Databricks CLI suffice. GPU compute is not required for these joins and exact sums.
 No client records, private employer data or credentials are uploaded.

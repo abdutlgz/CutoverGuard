@@ -161,17 +161,10 @@ The app also includes an exact-integer replay of the two synthetic events throug
 defective/fixed mappings. It is a local controlled parallel-run illustration,
 not a production digital twin. Replay fingerprints are separate from main exports.
 
-## AMD: separate measured compute path
+## Note on AMD
 
-AMD ROCm runs on a separate Radeon machine over SSH, **not inside Databricks**.
-The saved 1M-row synthetic allocation benchmark measured CPU tensor aggregation
-2.215 ms vs ROCm 1.400 ms median (1.58× ratio, approximately 0.815 ms difference),
-with exact oracle agreement. These are component timings, not full reconciliation.
-
-The updated benchmark additionally measures a labeled naive Python loop and a
-separately bounded resident-GPU calculation. A new 10M-row run is prepared but
-has not been measured. See [AMD instructions](amd/README.md); do not extrapolate
-production speedups or compare different timing boundaries as equivalents.
+An exact-integer GPU aggregation experiment on AMD ROCm was explored separately during the
+hackathon. It is not part of this submission, and this project is not entered in the AMD track.
 
 ## Checks and limitations
 

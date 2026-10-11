@@ -1,2 +1,2 @@
 pytest>=9,<10
-# Runtime uses the standard library. Optional: openpyxl for XLSX; PyTorch ROCm on AMD only.
+# Runtime uses the standard library. Optional: openpyxl for XLSX.
